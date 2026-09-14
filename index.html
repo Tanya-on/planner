@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlanPro v6 — Умный планировщик</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;600&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #8b5cf6;
+  --secondary: #ec4899;
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f4f4f5;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --border: #e4e4e7;
+  --radius: 16px;
+  --font-main: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --layout-padding: 30px;
+  --sidebar-width: 260px;
+}
+body.dark {
+  --primary: #a78bfa;
+  --secondary: #f472b6;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --border: #334155;
+}
+body.nature {
+  --primary: #10b981;
+  --secondary: #14b8a6;
+  --bg-primary: #ecfdf5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #d1fae5;
+  --text-primary: #064e3b;
+  --text-secondary: #047857;
+  --border: #a7f3d0;
+}
+body.sunset {
+  --primary: #f59e0b;
+  --secondary: #f97316;
+  --bg-primary: #fffbeb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #fef3c7;
+  --text-primary: #78350f;
+  --text-secondary: #92400e;
+  --border: #fde68a;
+}
+body.winter {
+  --primary: #0ea5e9;
+  --secondary: #38bdf8;
+  --bg-primary: #f0f9ff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e0f2fe;
+  --text-primary: #0c4a6e;
+  --text-secondary: #075985;
+  --border: #bae6fd;
+}
+body.autumn {
+  --primary: #ea580c;
+  --secondary: #f97316;
+  --bg-primary: #fff7ed;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ffedd5;
+  --text-primary: #7c2d12;
+  --text-secondary: #9a3412;
+  --border: #fed7aa;
+}
+body.elegant {
+  --primary: #6366f1;
+  --secondary: #8b5cf6;
+  --bg-primary: #f5f3ff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ede9fe;
+  --text-primary: #1e1b4b;
+  --text-secondary: #312e81;
+  --border: #ddd6fe;
+}
+body.compact { --layout-padding: 16px; --sidebar-width: 200px; }
+body.spacious { --layout-padding: 40px; --sidebar-width: 300px; }
+body.font-serif { --font-main: 'Playfair Display', serif; }
+body.font-mono { --font-main: 'Roboto Mono', monospace; }
+body.font-montserrat { --font-main: 'Montserrat', sans-serif; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all 0.3s;
+  min-height: 100vh;
+}
+.bg-mesh {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.bg-mesh::before, .bg-mesh::after {
+  content: ''; position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3;
+}
+.bg-mesh::before {
+  width: 600px; height: 600px; background: var(--primary);
+  top: -200px; right: -200px; animation: float1 20s ease-in-out infinite;
+}
+.bg-mesh::after {
+  width: 500px; height: 500px; background: var(--secondary);
+  bottom: -150px; left: -150px; animation: float2 25s ease-in-out infinite;
+}
+@keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(50px,50px)} }
+@keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-40px)} }
+.app-container { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+.sidebar {
+  width: var(--sidebar-width); background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  padding: 20px; position: fixed; height: 100vh;
+  overflow-y: auto; z-index: 30;
+}
+.sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: bold; font-size: 18px;
+}
+.logo-text h1 { font-size: 18px; font-weight: 800; }
+.logo-text p { font-size: 10px; opacity: 0.6; letter-spacing: 1px; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { background: var(--border); }
+.greeting-card {
+  background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.1));
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 12px; padding: 14px; margin-bottom: 20px;
+}
+.nav-menu { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 12px;
+  cursor: pointer; transition: all 0.2s;
+  color: var(--text-secondary); font-size: 14px; font-weight: 500;
+  border: none; background: transparent; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--bg-tertiary); }
+.nav-item.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+}
+.nav-item i { width: 18px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--bg-tertiary);
+  padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.nav-item.active .nav-badge { background: rgba(255,255,255,0.3); color: white; }
+.week-progress-card {
+  background: var(--bg-tertiary); border-radius: 12px;
+  padding: 12px; margin-bottom: 15px;
+}
+.week-progress-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; font-size: 11px;
+}
+.week-progress-bar {
+  width: 100%; height: 6px; background: var(--border);
+  border-radius: 3px; overflow: hidden;
+}
+.week-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 3px; transition: width 0.5s ease;
+}
+.sidebar-footer {
+  border-top: 1px solid var(--border); padding-top: 12px;
+}
+.sidebar-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s;
+  color: var(--text-secondary); font-size: 12px;
+  border: none; background: transparent; width: 100%; text-align: left;
+  margin-bottom: 4px;
+}
+.sidebar-btn:hover { background: var(--bg-tertiary); }
+.main-content {
+  flex: 1; margin-left: var(--sidebar-width); padding: var(--layout-padding);
+}
+.page { display: none; animation: fadeIn 0.4s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.page-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+}
+.page-title {
+  font-size: 28px; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.3s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.card-title {
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title i { color: var(--primary); }
+.card-body { padding: 20px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px;
+  font-weight: 600; font-size: 14px; cursor: pointer;
+  transition: all 0.2s; border: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,0.4); }
+.btn-secondary {
+  background: var(--bg-tertiary); color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-tertiary); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: inherit; font-size: 14px;
+  transition: all 0.2s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: all 0.3s; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+.stat-value { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+.stat-label { font-size: 12px; opacity: 0.6; }
+.schedule-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px; margin-bottom: 12px; border-radius: 12px;
+  transition: all 0.3s; position: relative;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+.schedule-item:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.schedule-item.now {
+  border: 2px solid var(--primary);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.8} }
+.schedule-item-time {
+  min-width: 100px; font-weight: 700; font-size: 14px;
+  color: var(--primary);
+}
+.schedule-item-content { flex: 1; min-width: 0; }
+.schedule-item-subject { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.schedule-item-details {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 12px; opacity: 0.7; margin-bottom: 8px;
+}
+.schedule-item-detail { display: flex; align-items: center; gap: 4px; }
+.schedule-item-actions {
+  display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s;
+}
+.schedule-item:hover .schedule-item-actions { opacity: 1; }
+.schedule-action-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); transition: all 0.2s; font-size: 12px;
+}
+.schedule-action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  z-index: 100; align-items: center; justify-content: center; padding: 20px;
+}
+.modal.active { display: flex; }
+.modal-content {
+  background: var(--bg-secondary); border-radius: 20px;
+  padding: 24px; width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.modal-title {
+  font-size: 20px; font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.modal-close {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--border); }
+.theme-selector {
+  position: fixed; bottom: 100px; right: 20px; z-index: 50;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1); display: none;
+  max-height: 80vh; overflow-y: auto;
+}
+.theme-selector.active { display: block; }
+.theme-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.theme-option {
+  width: 44px; height: 44px; border-radius: 12px;
+  cursor: pointer; transition: all 0.2s;
+  border: 3px solid transparent;
+}
+.theme-option:hover { transform: scale(1.1); }
+.theme-option.active { border-color: var(--text-primary); }
+.theme-light { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+.theme-dark { background: linear-gradient(135deg, #1e293b, #0f172a); }
+.theme-nature { background: linear-gradient(135deg, #10b981, #34d399); }
+.theme-sunset { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.theme-winter { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+.theme-autumn { background: linear-gradient(135deg, #ea580c, #f97316); }
+.theme-elegant { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.bottom-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-secondary); border-top: 1px solid var(--border);
+  padding: 8px; z-index: 50; justify-content: space-around;
+}
+.bottom-nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px; cursor: pointer; transition: all 0.2s;
+  color: var(--text-secondary); font-size: 10px;
+  border: none; background: transparent; flex: 1;
+}
+.bottom-nav-item i { font-size: 18px; margin-bottom: 4px; }
+.bottom-nav-item.active { color: var(--primary); }
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .bottom-nav { display: flex; }
+  .main-content { margin-left: 0; padding: 16px; padding-bottom: 80px; }
+}
+@media (min-width: 769px) { .bottom-nav { display: none !important; } }
+.confetti {
+  position: fixed; width: 10px; height: 10px;
+  pointer-events: none; z-index: 1000;
+  animation: confettiFall 1.5s ease-out forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-200px) rotate(720deg); opacity: 0; }
+}
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--text-secondary);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+.task-item {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 8px;
+  transition: all 0.3s; display: flex; align-items: center; gap: 12px;
+}
+.task-item:hover { transform: translateX(4px); }
+.task-item.completed { opacity: 0.6; }
+.task-item.completed .task-title { text-decoration: line-through; }
+.task-checkbox {
+  width: 22px; height: 22px; border: 2px solid var(--border);
+  border-radius: 6px; cursor: pointer; position: relative;
+  flex-shrink: 0; transition: all 0.2s; appearance: none;
+}
+.task-checkbox:checked {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: transparent;
+}
+.task-checkbox:checked::after {
+  content: '✓'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); color: white; font-size: 14px; font-weight: bold;
+}
+.task-content { flex: 1; min-width: 0; }
+.task-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.task-badge {
+  padding: 3px 8px; border-radius: 12px;
+  font-size: 11px; font-weight: 600;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.habit-cell {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+  background: var(--bg-tertiary); color: var(--text-tertiary);
+  font-size: 10px; font-weight: 600;
+}
+.habit-cell:hover { transform: scale(1.15); }
+.habit-cell.done {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+}
+.habit-cell.skipped { background: var(--danger, #ef4444); color: white; }
+.habit-cell.today { box-shadow: 0 0 0 2px var(--primary); }
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 16px;
+  padding: 40px; text-align: center; cursor: pointer;
+  transition: all 0.3s; background: var(--bg-secondary);
+}
+.upload-zone:hover { border-color: var(--primary); background: rgba(139,92,246,0.05); }
+.upload-zone.dragover { border-color: var(--primary); background: rgba(139,92,246,0.1); }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+
+<!-- Theme Selector -->
+<div class="theme-selector" id="themeSelector">
+  <div style="font-size:12px;font-weight:600;margin-bottom:12px;text-align:center">Выберите тему</div>
+  <div class="theme-options">
+    <div class="theme-option theme-light active" onclick="setTheme('light')" title="Light"></div>
+    <div class="theme-option theme-dark" onclick="setTheme('dark')" title="Dark"></div>
+    <div class="theme-option theme-nature" onclick="setTheme('nature')" title="Nature"></div>
+    <div class="theme-option theme-sunset" onclick="setTheme('sunset')" title="Sunset"></div>
+    <div class="theme-option theme-winter" onclick="setTheme('winter')" title="Winter"></div>
+    <div class="theme-option theme-autumn" onclick="setTheme('autumn')" title="Autumn"></div>
+    <div class="theme-option theme-elegant" onclick="setTheme('elegant')" title="Elegant"></div>
+  </div>
+  <div style="font-size:12px;font-weight:600;margin:12px 0 8px;text-align:center">Шрифт</div>
+  <div class="theme-options">
+    <button onclick="setFont('Inter')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer;font-family:Inter">Inter</button>
+    <button onclick="setFont('Montserrat')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer;font-family:Montserrat">Montserrat</button>
+    <button onclick="setFont('Playfair Display')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer;font-family:'Playfair Display'">Serif</button>
+    <button onclick="setFont('Roboto Mono')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer;font-family:'Roboto Mono'">Mono</button>
+  </div>
+  <div style="font-size:12px;font-weight:600;margin:12px 0 8px;text-align:center">Layout</div>
+  <div class="theme-options">
+    <button onclick="setLayout('compact')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer">Компактный</button>
+    <button onclick="setLayout('default')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer">Обычный</button>
+    <button onclick="setLayout('spacious')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer">Просторный</button>
+  </div>
+</div>
+
+<div class="app-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+        <div class="logo-text">
+          <h1>PlanPro</h1>
+          <p>ULTIMATE V6</p>
+        </div>
+      </div>
+      <button class="theme-toggle" onclick="toggleThemeSelector()" title="Настройки">
+        <i class="fas fa-palette"></i>
+      </button>
+    </div>
+
+    <div class="greeting-card">
+      <div id="greeting" style="font-size:14px;font-weight:600;margin-bottom:4px"></div>
+      <div id="currentDate" style="font-size:11px;opacity:0.7"></div>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item" onclick="showPage('dashboard')"><i class="fas fa-home"></i><span>Обзор</span></button>
+      <button class="nav-item" onclick="showPage('calendar')"><i class="fas fa-calendar"></i><span>Календарь</span></button>
+      <button class="nav-item" onclick="showPage('tasks')"><i class="fas fa-check-circle"></i><span>Задачи</span><span class="nav-badge" id="navTaskCount">0</span></button>
+      <button class="nav-item" onclick="showPage('projects')"><i class="fas fa-folder"></i><span>Проекты/ДЗ</span></button>
+      <button class="nav-item" onclick="showPage('deadlines')"><i class="fas fa-flag"></i><span>Дедлайны</span></button>
+      <button class="nav-item active" onclick="showPage('schedule')"><i class="fas fa-book-reader"></i><span>Расписание</span></button>
+      <button class="nav-item" onclick="showPage('habits')"><i class="fas fa-fire"></i><span>Привычки</span></button>
+      <button class="nav-item" onclick="showPage('sleep')"><i class="fas fa-moon"></i><span>Сон</span></button>
+      <button class="nav-item" onclick="showPage('goals')"><i class="fas fa-bullseye"></i><span>Цели</span></button>
+      <button class="nav-item" onclick="showPage('pomodoro')"><i class="fas fa-clock"></i><span>Фокус</span></button>
+      <button class="nav-item" onclick="showPage('analytics')"><i class="fas fa-chart-line"></i><span>Аналитика</span></button>
+      <button class="nav-item" onclick="showPage('notes')"><i class="fas fa-sticky-note"></i><span>Заметки</span></button>
+      <button class="nav-item" onclick="showPage('import')"><i class="fas fa-code"></i><span>Импорт</span></button>
+    </nav>
+
+    <div class="week-progress-card">
+      <div class="week-progress-header">
+        <span style="font-weight:600">Неделя</span>
+        <span id="weekProgressText" style="font-weight:700;color:var(--primary)">0%</span>
+      </div>
+      <div class="week-progress-bar">
+        <div class="week-progress-fill" id="weekProgressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-btn" onclick="exportData()"><i class="fas fa-download"></i><span>Экспорт</span></button>
+      <button class="sidebar-btn" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i><span>Импорт</span></button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="page">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title" id="dashTitle"></h2>
+          <p style="opacity:0.7;font-size:14px">Готов к продуктивному дню?</p>
+        </div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px;cursor:pointer" onclick="updateQuote()">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0"><i class="fas fa-quote-left"></i></div>
+          <div>
+            <div id="quoteText" style="font-weight:500;margin-bottom:6px;line-height:1.5"></div>
+            <div id="quoteAuthor" style="font-size:12px;opacity:0.6;font-style:italic"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="statToday">0</div><div class="stat-label">Задач сегодня</div></div>
+        <div class="stat-card"><div class="stat-value" id="statDone" style="color:var(--primary)">0</div><div class="stat-label">Выполнено</div></div>
+        <div class="stat-card"><div class="stat-value" id="statClasses" style="color:var(--primary)">0</div><div class="stat-label">Пар сегодня</div></div>
+        <div class="stat-card"><div class="stat-value" id="statStreak" style="color:#f59e0b">0</div><div class="stat-label">Дней серии</div></div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-line" style="color:var(--primary)"></i> Прогресс дня</div>
+          <div id="dayProgressText" style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent">0%</div>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div id="dayProgressFill" style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;transition:width 0.7s;width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Evening Summary -->
+      <div class="card mb-5" style="padding:20px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1))">
+        <div style="font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <i class="fas fa-moon" style="color:var(--primary)"></i> Вечерний итог дня
+        </div>
+        <div id="eveningSummary" style="font-size:14px;line-height:1.6"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-flag" style="color:#ef4444"></i> Срочные дедлайны</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('deadlines')">Все →</button>
+          </div>
+          <div class="card-body" id="dashDeadlines" style="max-height:300px;overflow-y:auto"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-check-double" style="color:#3b82f6"></i> Задачи на сегодня</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('tasks');openTaskModal()">+ Добавить</button>
+          </div>
+          <div class="card-body" id="dashTasks" style="max-height:300px;overflow-y:auto"></div>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-book" style="color:var(--primary)"></i> Расписание сегодня</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('schedule')">Все →</button>
+          </div>
+          <div class="card-body" id="dashSchedule"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="tasks" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Задачи</h2>
+        <button class="btn btn-primary" onclick="openTaskModal()"><i class="fas fa-plus"></i> Новая задача</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="filterTasks('all',this)">Все</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterTasks('today',this)">Сегодня</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterTasks('week',this)">Неделя</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterTasks('done',this)">✓ Готово</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterTasks('recurring',this)">🔄 Повторяющиеся</button>
+      </div>
+      <div id="tasksList"></div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div id="projects" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Проекты и ДЗ</h2>
+        <button class="btn btn-primary" onclick="openProjectModal()"><i class="fas fa-plus"></i> Новый проект</button>
+      </div>
+      <div id="projectsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- DEADLINES -->
+    <div id="deadlines" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Дедлайны</h2>
+        <button class="btn btn-primary" onclick="openDeadlineModal()"><i class="fas fa-plus"></i> Новый дедлайн</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="deadlineTotal">0</div><div class="stat-label">Всего</div></div>
+        <div class="stat-card"><div class="stat-value" id="deadlineUrgent" style="color:#ef4444">0</div><div class="stat-label">Срочные</div></div>
+        <div class="stat-card"><div class="stat-value" id="deadlineDone" style="color:#10b981">0</div><div class="stat-label">Выполнено</div></div>
+      </div>
+      <div id="deadlinesList"></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div id="schedule" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Расписание</h2>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-secondary" onclick="openScheduleModal()"><i class="fas fa-plus"></i> Добавить</button>
+          <button class="btn btn-primary" onclick="openImportExportModal()"><i class="fas fa-file-import"></i> Импорт/Экспорт</button>
+        </div>
+      </div>
+
+      <div class="card mb-5">
+        <div class="card-body">
+          <div class="upload-zone" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+            <i class="fas fa-cloud-upload-alt" style="font-size:48px;opacity:0.4;margin-bottom:12px"></i>
+            <div style="font-weight:600;margin-bottom:4px">Загрузить расписание</div>
+            <div style="font-size:12px;opacity:0.6">.ics, .xlsx, .csv, скриншоты, Modeus</div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".ics,.xlsx,.csv,image/*" onchange="handleFileSelect(event)">
+        </div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-sticky-note" style="color:var(--primary)"></i> Заметки на неделю</div>
+          <button class="btn btn-ghost btn-sm" onclick="editWeekNotes()"><i class="fas fa-edit"></i> Редактировать</button>
+        </div>
+        <div id="weekNotesContent" style="min-height:60px;padding:12px;background:var(--bg-tertiary);border-radius:8px;font-size:13px;line-height:1.6">Нажмите "Редактировать" чтобы добавить заметки...</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="setScheduleView('day',this)">День</button>
+          <button class="btn btn-secondary btn-sm" onclick="setScheduleView('week',this)">Неделя</button>
+          <button class="btn btn-secondary btn-sm" onclick="setScheduleView('month',this)">Месяц</button>
+          <button class="btn btn-secondary btn-sm" onclick="setScheduleView('list',this)">Список</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-secondary btn-sm" onclick="navigateSchedule(-1)"><i class="fas fa-chevron-left"></i></button>
+          <div id="scheduleDateDisplay" style="padding:8px 16px;font-weight:600"></div>
+          <button class="btn btn-secondary btn-sm" onclick="navigateSchedule(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px">
+          <i class="fas fa-search" style="opacity:0.5"></i>
+          <input type="text" id="scheduleSearch" placeholder="Поиск..." oninput="renderSchedule()" style="border:none;background:transparent;font-size:13px;color:var(--text-primary)">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px">
+          <select id="filterSubject" onchange="renderSchedule()" style="border:none;background:transparent;font-size:13px;color:var(--text-primary)">
+            <option value="">Все предметы</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px">
+          <select id="filterType" onchange="renderSchedule()" style="border:none;background:transparent;font-size:13px;color:var(--text-primary)">
+            <option value="">Все типы</option>
+            <option value="lecture">Лекции</option>
+            <option value="practice">Практики</option>
+            <option value="lab">Лабораторные</option>
+            <option value="online">Онлайн</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="scheduleList"></div>
+    </div>
+
+    <!-- HABITS -->
+    <div id="habits" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Привычки</h2>
+        <button class="btn btn-primary" onclick="openHabitModal()"><i class="fas fa-plus"></i> Новая привычка</button>
+      </div>
+      <div id="habitsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- SLEEP -->
+    <div id="sleep" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Трекер сна</h2>
+        <button class="btn btn-primary" onclick="openSleepModal()"><i class="fas fa-plus"></i> Записать сон</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="sleepAvg">0ч</div><div class="stat-label">Среднее за неделю</div></div>
+        <div class="stat-card"><div class="stat-value" id="sleepBest">0ч</div><div class="stat-label">Лучший сон</div></div>
+        <div class="stat-card"><div class="stat-value" id="sleepRecords">0</div><div class="stat-label">Записей</div></div>
+      </div>
+      <div class="card" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px">История сна</div>
+        <div id="sleepList"></div>
+      </div>
+    </div>
+
+    <!-- GOALS -->
+    <div id="goals" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Цели</h2>
+        <button class="btn btn-primary" onclick="openGoalModal()"><i class="fas fa-plus"></i> Новая цель</button>
+      </div>
+      <div id="goalsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- POMODORO -->
+    <div id="pomodoro" class="page">
+      <div class="page-header"><h2 class="page-title">Фокус-таймер</h2></div>
+      <div style="max-width:600px;margin:0 auto;text-align:center">
+        <div class="card" style="padding:40px;margin-bottom:20px">
+          <div id="pomodoroMode" style="font-size:12px;text-transform:uppercase;letter-spacing:2px;opacity:0.6;margin-bottom:16px;font-weight:600">ФОКУС</div>
+          <div id="pomodoroTimer" style="font-size:80px;font-weight:800;font-family:'JetBrains Mono',monospace;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px;letter-spacing:-2px">25:00</div>
+          <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+            <button class="btn btn-primary" id="pomStart" onclick="startPomodoro()"><i class="fas fa-play"></i> Старт</button>
+            <button class="btn btn-secondary" id="pomPause" onclick="pausePomodoro()" style="display:none"><i class="fas fa-pause"></i> Пауза</button>
+            <button class="btn btn-secondary" onclick="resetPomodoro()"><i class="fas fa-redo"></i> Сброс</button>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="setPomodoroMode('focus',25*60,this)"> 25 мин</button>
+            <button class="btn btn-secondary btn-sm" onclick="setPomodoroMode('short',5*60,this)">☕ 5 мин</button>
+            <button class="btn btn-secondary btn-sm" onclick="setPomodoroMode('long',15*60,this)">🌙 15 мин</button>
+            <button class="btn btn-secondary btn-sm" onclick="openCustomTimer()">⚙️ Свой</button>
+          </div>
+        </div>
+        <div class="card" style="padding:24px">
+          <div style="font-size:12px;opacity:0.6;margin-bottom:8px">Сессий сегодня</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+            <div id="pomodoroCount" style="font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent">0</div>
+            <i class="fas fa-trophy" style="font-size:32px;color:#fbbf24"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="analytics" class="page">
+      <div class="page-header"><h2 class="page-title">Продвинутая аналитика</h2></div>
+      
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="anTotalHours">0</div><div class="stat-label">Часов в фокусе</div></div>
+        <div class="stat-card"><div class="stat-value" id="anAttendance">0%</div><div class="stat-label">Посещаемость</div></div>
+        <div class="stat-card"><div class="stat-value" id="anTasksDone">0</div><div class="stat-label">Задач выполнено</div></div>
+        <div class="stat-card"><div class="stat-value" id="anGoalsProgress">0%</div><div class="stat-label">Прогресс целей</div></div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-clock" style="color:var(--primary)"></i> Часы по предметам</div>
+        <div id="subjectHoursChart"></div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-sun" style="color:#f59e0b"></i> Продуктивность по времени суток</div>
+        <div id="timeProductivityChart"></div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-trophy" style="color:#fbbf24"></i> Рейтинг предметов по времени</div>
+        <div id="subjectRanking"></div>
+      </div>
+
+      <div class="card mb-5" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Паттерны пропусков</div>
+        <div id="skipPatterns"></div>
+      </div>
+
+      <div class="card" style="padding:20px">
+        <div style="font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-bullseye" style="color:var(--primary)"></i> Прогресс по целям</div>
+        <div id="goalsProgressChart"></div>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div id="notes" class="page">
+      <div class="page-header">
+        <h2 class="page-title">Заметки</h2>
+        <button class="btn btn-primary" onclick="openNoteModal()"><i class="fas fa-plus"></i> Новая заметка</button>
+      </div>
+      <div id="notesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="import" class="page">
+      <div class="page-header"><h2 class="page-title">Импорт кода</h2></div>
+      <div class="card" style="padding:24px">
+        <div class="card mb-4" style="background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1));border-color:rgba(139,92,246,0.3);padding:20px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0"><i class="fas fa-info"></i></div>
+            <div>
+              <div style="font-weight:600;margin-bottom:8px">Как использовать</div>
+              <ol style="font-size:13px;opacity:0.8;padding-left:20px;line-height:1.8">
+                <li>Скинь мне скриншот расписания</li>
+                <li>Я напишу готовый код</li>
+                <li>Скопируй код и вставь в поле ниже</li>
+                <li>Нажми <b>Выполнить</b></li>
+                <li>Готово!</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Вставь код</label>
+          <textarea id="importCodeArea" style="width:100%;min-height:300px;padding:16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;resize:vertical" placeholder="// Вставь сюда код"></textarea>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-primary" onclick="executeImportCode()"><i class="fas fa-play"></i> Выполнить</button>
+          <button class="btn btn-secondary" onclick="clearImportCode()"><i class="fas fa-trash"></i> Очистить</button>
+          <button class="btn btn-secondary" onclick="pasteFromClipboard()"><i class="fas fa-paste"></i> Вставить</button>
+        </div>
+        <div id="importResult" style="margin-top:16px;padding:16px;border-radius:12px;display:none"></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="calendar" class="page">
+      <div class="page-header"><h2 class="page-title">Календарь</h2></div>
+      <div class="card" style="padding:20px"><div id="calendarView"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-item" onclick="showPage('dashboard')"><i class="fas fa-home"></i><span>Обзор</span></button>
+  <button class="bottom-nav-item" onclick="showPage('tasks')"><i class="fas fa-check-circle"></i><span>Задачи</span></button>
+  <button class="bottom-nav-item active" onclick="showPage('schedule')"><i class="fas fa-book-reader"></i><span>Расписание</span></button>
+  <button class="bottom-nav-item" onclick="showPage('habits')"><i class="fas fa-fire"></i><span>Привычки</span></button>
+  <button class="bottom-nav-item" onclick="showPage('pomodoro')"><i class="fas fa-clock"></i><span>Таймер</span></button>
+</nav>
+
+<!-- MODALS -->
+<div class="modal" id="taskModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новая задача</h3>
+      <button class="modal-close" onclick="closeModal('taskModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="taskTitle" class="form-input" placeholder="Название *"></div>
+    <div class="form-group"><textarea id="taskDesc" class="form-textarea" placeholder="Описание" rows="2"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Дата</label><input type="date" id="taskDate" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Время</label><input type="time" id="taskTime" class="form-input"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Категория</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <button class="btn btn-secondary btn-sm" data-cat="study" onclick="selectTaskCategory('study',this)">📘 Учёба</button>
+        <button class="btn btn-secondary btn-sm" data-cat="personal" onclick="selectTaskCategory('personal',this)">🌱 Личное</button>
+        <button class="btn btn-secondary btn-sm" data-cat="health" onclick="selectTaskCategory('health',this)">❤️ Здоровье</button>
+        <button class="btn btn-secondary btn-sm" data-cat="creative" onclick="selectTaskCategory('creative',this)"> Творчество</button>
+        <button class="btn btn-secondary btn-sm" data-cat="work" onclick="selectTaskCategory('work',this)"> Работа</button>
+        <button class="btn btn-secondary btn-sm active" data-cat="other" onclick="selectTaskCategory('other',this)">📌 Другое</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Приоритет</label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" style="flex:1" data-pri="high" onclick="selectTaskPriority('high',this)">🔴 Высокий</button>
+        <button class="btn btn-secondary btn-sm active" style="flex:1" data-pri="medium" onclick="selectTaskPriority('medium',this)">🟡 Средний</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" data-pri="low" onclick="selectTaskPriority('low',this)">🟢 Низкий</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="taskRecurring"> <span>🔄 Повторяющаяся задача</span>
+      </label>
+    </div>
+    <div class="form-group" id="recurringOptions" style="display:none">
+      <label class="form-label">Повторять</label>
+      <select id="taskRecurringFreq" class="form-select">
+        <option value="daily">Каждый день</option>
+        <option value="weekly">Каждую неделю</option>
+        <option value="monthly">Каждый месяц</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveTask()" style="flex:1">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal('taskModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="projectModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новый проект/ДЗ</h3>
+      <button class="modal-close" onclick="closeModal('projectModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="projectTitle" class="form-input" placeholder="Название *"></div>
+    <div class="form-group"><textarea id="projectDesc" class="form-textarea" placeholder="Описание" rows="2"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Предмет</label><input type="text" id="projectSubject" class="form-input" placeholder="Например: Математика"></div>
+      <div class="form-group"><label class="form-label">Дедлайн</label><input type="date" id="projectDeadline" class="form-input"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ссылки на материалы</label>
+      <input type="text" id="projectLinks" class="form-input" placeholder="https://... (через запятую)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Чек-лист (через запятую)</label>
+      <input type="text" id="projectChecklist" class="form-input" placeholder="Пункт 1, Пункт 2, Пункт 3">
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveProject()" style="flex:1">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('projectModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="deadlineModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новый дедлайн</h3>
+      <button class="modal-close" onclick="closeModal('deadlineModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="deadlineTitle" class="form-input" placeholder="Название *"></div>
+    <div class="form-group"><textarea id="deadlineDesc" class="form-textarea" placeholder="Описание" rows="2"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Дедлайн *</label><input type="date" id="deadlineDate" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Приоритет</label>
+        <select id="deadlinePriority" class="form-select">
+          <option value="high">🔴 Высокий</option>
+          <option value="medium" selected>🟡 Средний</option>
+          <option value="low"> Низкий</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveDeadline()" style="flex:1">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('deadlineModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="scheduleModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Добавить пару</h3>
+      <button class="modal-close" onclick="closeModal('scheduleModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="schedSubject" class="form-input" placeholder="Предмет *"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Дата *</label><input type="date" id="schedDate" class="form-input"></div>
+      <div class="form-group"><label class="form-label">День</label>
+        <select id="schedDay" class="form-select">
+          <option value="1">Пн</option><option value="2">Вт</option><option value="3">Ср</option>
+          <option value="4">Чт</option><option value="5">Пт</option><option value="6">Сб</option><option value="0">Вс</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Начало</label><input type="time" id="schedStart" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Конец</label><input type="time" id="schedEnd" class="form-input"></div>
+    </div>
+    <div class="form-group"><input type="text" id="schedRoom" class="form-input" placeholder="Аудитория / Ссылка"></div>
+    <div class="form-group"><input type="text" id="schedTeacher" class="form-input" placeholder="Преподаватель"></div>
+    <div class="form-group"><label class="form-label">Тип занятия</label>
+      <select id="schedType" class="form-select">
+        <option value="lecture">📚 Лекция</option>
+        <option value="practice">✍️ Практика</option>
+        <option value="lab">🔬 Лабораторная</option>
+        <option value="online">💻 Онлайн</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Цвет</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="selectSchedColor('#3B82F6',this)" style="width:36px;height:36px;border-radius:8px;background:#3B82F6;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectSchedColor('#10B981',this)" style="width:36px;height:36px;border-radius:8px;background:#10B981;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectSchedColor('#F59E0B',this)" style="width:36px;height:36px;border-radius:8px;background:#F59E0B;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectSchedColor('#EF4444',this)" style="width:36px;height:36px;border-radius:8px;background:#EF4444;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectSchedColor('#8B5CF6',this)" style="width:36px;height:36px;border-radius:8px;background:#8B5CF6;border:3px solid var(--text-primary);cursor:pointer"></button>
+        <button onclick="selectSchedColor('#EC4899',this)" style="width:36px;height:36px;border-radius:8px;background:#EC4899;border:3px solid transparent;cursor:pointer"></button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveSchedule()" style="flex:1">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal('scheduleModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="habitModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новая привычка</h3>
+      <button class="modal-close" onclick="closeModal('habitModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="habitName" class="form-input" placeholder="Название *"></div>
+    <div class="form-group"><label class="form-label">Частота</label>
+      <select id="habitFreq" class="form-select">
+        <option value="daily">Ежедневно</option>
+        <option value="weekly">Еженедельно</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveHabit()" style="flex:1">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('habitModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="sleepModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Записать сон</h3>
+      <button class="modal-close" onclick="closeModal('sleepModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Лёг в</label><input type="time" id="sleepStart" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Проснулся в</label><input type="time" id="sleepEnd" class="form-input"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Качество сна (1-10)</label>
+      <input type="range" id="sleepQuality" min="1" max="10" value="7" style="width:100%">
+      <div style="text-align:center;font-weight:600" id="sleepQualityValue">7</div>
+    </div>
+    <div class="form-group"><textarea id="sleepNotes" class="form-textarea" placeholder="Заметки (необязательно)" rows="2"></textarea></div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveSleep()" style="flex:1">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal('sleepModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="goalModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новая цель</h3>
+      <button class="modal-close" onclick="closeModal('goalModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="goalTitle" class="form-input" placeholder="Название *"></div>
+    <div class="form-group"><textarea id="goalDesc" class="form-textarea" placeholder="Описание" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">Целевая дата</label><input type="date" id="goalDate" class="form-input"></div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveGoal()" style="flex:1">Поставить цель</button>
+      <button class="btn btn-secondary" onclick="closeModal('goalModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="noteModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Новая заметка</h3>
+      <button class="modal-close" onclick="closeModal('noteModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><input type="text" id="noteTitle" class="form-input" placeholder="Заголовок"></div>
+    <div class="form-group"><textarea id="noteContent" class="form-textarea" placeholder="Текст" rows="6"></textarea></div>
+    <div class="form-group"><label class="form-label">Цвет</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="selectNoteColor('#FEF3C7',this)" style="width:36px;height:36px;border-radius:50%;background:#FEF3C7;border:3px solid var(--text-primary);cursor:pointer"></button>
+        <button onclick="selectNoteColor('#DBEAFE',this)" style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectNoteColor('#D1FAE5',this)" style="width:36px;height:36px;border-radius:50%;background:#D1FAE5;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectNoteColor('#FCE7F3',this)" style="width:36px;height:36px;border-radius:50%;background:#FCE7F3;border:3px solid transparent;cursor:pointer"></button>
+        <button onclick="selectNoteColor('#E9D5FF',this)" style="width:36px;height:36px;border-radius:50%;background:#E9D5FF;border:3px solid transparent;cursor:pointer"></button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="saveNote()" style="flex:1">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal('noteModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="customTimerModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Свой таймер</h3>
+      <button class="modal-close" onclick="closeModal('customTimerModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Часы</label><input type="number" id="customHours" class="form-input" min="0" max="23" value="0" style="text-align:center;font-size:24px;font-weight:bold"></div>
+      <div class="form-group"><label class="form-label">Минуты</label><input type="number" id="customMinutes" class="form-input" min="0" max="59" value="25" style="text-align:center;font-size:24px;font-weight:bold"></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-primary" onclick="applyCustomTimer()" style="flex:1">Запустить</button>
+      <button class="btn btn-secondary" onclick="closeModal('customTimerModal')" style="flex:1">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="importExportModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Импорт / Экспорт</h3>
+      <button class="modal-close" onclick="closeModal('importExportModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card" style="padding:20px;text-align:center;cursor:pointer" onclick="exportToICS()">
+        <i class="fas fa-file-export" style="font-size:32px;color:var(--primary);margin-bottom:12px"></i>
+        <div style="font-weight:600;margin-bottom:4px">Экспорт в .ics</div>
+        <div style="font-size:12px;opacity:0.7">Google Calendar, Outlook</div>
+      </div>
+      <div class="card" style="padding:20px;text-align:center;cursor:pointer" onclick="exportToPDF()">
+        <i class="fas fa-file-pdf" style="font-size:32px;color:#ef4444;margin-bottom:12px"></i>
+        <div style="font-weight:600;margin-bottom:4px">Экспорт в PDF</div>
+        <div style="font-size:12px;opacity:0.7">Печатная версия</div>
+      </div>
+      <div class="card" style="padding:20px;text-align:center;cursor:pointer" onclick="document.getElementById('icsInput').click()">
+        <i class="fas fa-file-import" style="font-size:32px;color:#10b981;margin-bottom:12px"></i>
+        <div style="font-weight:600;margin-bottom:4px">Импорт .ics</div>
+        <div style="font-size:12px;opacity:0.7">Из календаря</div>
+        <input type="file" id="icsInput" style="display:none" accept=".ics" onchange="importICS(event)">
+      </div>
+      <div class="card" style="padding:20px;text-align:center;cursor:pointer" onclick="copyScheduleLink()">
+        <i class="fas fa-link" style="font-size:32px;color:var(--secondary);margin-bottom:12px"></i>
+        <div style="font-weight:600;margin-bottom:4px">Ссылка</div>
+        <div style="font-size:12px;opacity:0.7">Поделиться</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TODAY = new Date().toISOString().split('T')[0];
+
+let data = {
+  tasks: JSON.parse(localStorage.getItem('pp_tasks') || '[]'),
+  schedule: JSON.parse(localStorage.getItem('pp_schedule') || '[]'),
+  habits: JSON.parse(localStorage.getItem('pp_habits') || '[]'),
+  goals: JSON.parse(localStorage.getItem('pp_goals') || '[]'),
+  deadlines: JSON.parse(localStorage.getItem('pp_deadlines') || '[]'),
+  notes: JSON.parse(localStorage.getItem('pp_notes') || '[]'),
+  projects: JSON.parse(localStorage.getItem('pp_projects') || '[]'),
+  sleep: JSON.parse(localStorage.getItem('pp_sleep') || '[]'),
+  weekNotes: localStorage.getItem('pp_weekNotes') || '',
+  pomodoroCount: parseInt(localStorage.getItem('pp_pomodoroCount') || '0'),
+  pomodoroDate: localStorage.getItem('pp_pomodoroDate') || '',
+  timerHistory: JSON.parse(localStorage.getItem('pp_timerHistory') || '[]'),
+  focusMinutes: parseInt(localStorage.getItem('pp_focusMinutes') || '0'),
+  taskTimeSpent: JSON.parse(localStorage.getItem('pp_taskTimeSpent') || '{}'),
+  attendance: JSON.parse(localStorage.getItem('pp_attendance') || '{}')
+};
+
+if (data.pomodoroDate !== TODAY) {
+  data.pomodoroCount = 0;
+  data.pomodoroDate = TODAY;
+}
+
+let state = {
+  currentFilter: 'all',
+  currentCategory: 'all',
+  selectedTaskCategory: 'other',
+  selectedTaskPriority: 'medium',
+  selectedSchedColor: '#8B5CF6',
+  selectedNoteColor: '#FEF3C7',
+  scheduleView: 'day',
+  calView: 'day',
+  calDate: new Date(),
+  currentDate: new Date(),
+  pomodoroTime: 25 * 60,
+  pomodoroRunning: false,
+  pomodoroInterval: null,
+  pomodoroMode: 'focus',
+  pomodoroStartTime: null
+};
+
+const quotes = [
+  { text: "Маленькие шаги каждый день приводят к большим результатам.", author: "Неизвестный автор" },
+  { text: "Дисциплина — это мост между целями и достижениями.", author: "Джим Рон" },
+  { text: "Не считай дни, делай так, чтобы дни считались.", author: "Мухаммед Али" },
+  { text: "Успех — это сумма маленьких усилий, повторяющихся день за днём.", author: "Роберт Кольер" },
+  { text: "Ты сильнее, чем думаешь.", author: "Неизвестный автор" },
+  { text: "Прогресс, а не совершенство.", author: "Неизвестный автор" },
+  { text: "Делай что можешь, с тем что имеешь, там где ты есть.", author: "Теодор Рузвельт" },
+  { text: "Единственный способ делать великие дела — любить то, что делаешь.", author: "Стив Джобс" }
+];
+
+const categoryInfo = {
+  study: { icon: '📘', name: 'Учёба', color: '#3b82f6' },
+  personal: { icon: '🌱', name: 'Личное', color: '#10b981' },
+  health: { icon: '❤️', name: 'Здоровье', color: '#ef4444' },
+  creative: { icon: '🎨', name: 'Творчество', color: '#8b5cf6' },
+  work: { icon: '💼', name: 'Работа', color: '#f59e0b' },
+  other: { icon: '📌', name: 'Другое', color: '#6b7280' }
+};
+
+const typeIcons = { lecture: '📚', practice: '✍️', lab: '🔬', online: '💻' };
+const subjectColors = {};
+
+function save() {
+  localStorage.setItem('pp_tasks', JSON.stringify(data.tasks));
+  localStorage.setItem('pp_schedule', JSON.stringify(data.schedule));
+  localStorage.setItem('pp_habits', JSON.stringify(data.habits));
+  localStorage.setItem('pp_goals', JSON.stringify(data.goals));
+  localStorage.setItem('pp_deadlines', JSON.stringify(data.deadlines));
+  localStorage.setItem('pp_notes', JSON.stringify(data.notes));
+  localStorage.setItem('pp_projects', JSON.stringify(data.projects));
+  localStorage.setItem('pp_sleep', JSON.stringify(data.sleep));
+  localStorage.setItem('pp_weekNotes', data.weekNotes);
+  localStorage.setItem('pp_pomodoroCount', data.pomodoroCount.toString());
+  localStorage.setItem('pp_pomodoroDate', data.pomodoroDate);
+  localStorage.setItem('pp_timerHistory', JSON.stringify(data.timerHistory));
+  localStorage.setItem('pp_focusMinutes', data.focusMinutes.toString());
+  localStorage.setItem('pp_taskTimeSpent', JSON.stringify(data.taskTimeSpent));
+  localStorage.setItem('pp_attendance', JSON.stringify(data.attendance));
+}
+
+function setTheme(theme) {
+  document.body.className = theme + ' ' + (localStorage.getItem('pp_font') || '') + ' ' + (localStorage.getItem('pp_layout') || '');
+  localStorage.setItem('pp_theme', theme);
+  document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.theme-${theme}`);
+  if (el) el.classList.add('active');
+  document.getElementById('themeSelector').classList.remove('active');
+}
+
+function setFont(font) {
+  const fontMap = { 'Inter': '', 'Montserrat': 'font-montserrat', 'Playfair Display': 'font-serif', 'Roboto Mono': 'font-mono' };
+  document.body.className = (localStorage.getItem('pp_theme') || 'light') + ' ' + (fontMap[font] || '') + ' ' + (localStorage.getItem('pp_layout') || '');
+  localStorage.setItem('pp_font', fontMap[font] || '');
+}
+
+function setLayout(layout) {
+  const layoutMap = { 'compact': 'compact', 'default': '', 'spacious': 'spacious' };
+  document.body.className = (localStorage.getItem('pp_theme') || 'light') + ' ' + (localStorage.getItem('pp_font') || '') + ' ' + (layoutMap[layout] || '');
+  localStorage.setItem('pp_layout', layoutMap[layout] || '');
+}
+
+function toggleThemeSelector() {
+  document.getElementById('themeSelector').classList.toggle('active');
+}
+
+const savedTheme = localStorage.getItem('pp_theme') || 'light';
+const savedFont = localStorage.getItem('pp_font') || '';
+const savedLayout = localStorage.getItem('pp_layout') || '';
+document.body.className = savedTheme + ' ' + savedFont + ' ' + savedLayout;
+if (savedTheme) {
+  const el = document.querySelector(`.theme-${savedTheme}`);
+  if (el) el.classList.add('active');
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navBtn = document.querySelector(`.nav-item[onclick="showPage('${pageId}')"]`);
+  if (navBtn) navBtn.classList.add('active');
+  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+  const bottomBtn = document.querySelector(`.bottom-nav-item[onclick="showPage('${pageId}')"]`);
+  if (bottomBtn) bottomBtn.classList.add('active');
+  if (pageId === 'schedule') renderSchedule();
+  if (pageId === 'analytics') renderAnalytics();
+  if (pageId === 'sleep') renderSleep();
+  if (pageId === 'projects') renderProjects();
+  document.getElementById('themeSelector').classList.remove('active');
+  window.scrollTo(0, 0);
+}
+
+function updateGreeting() {
+  const hour = new Date().getHours();
+  let greeting = hour >= 5 && hour < 12 ? 'Доброе утро! ☀️' :
+                 hour >= 12 && hour < 17 ? 'Добрый день! ️' :
+                 hour >= 17 && hour < 22 ? 'Добрый вечер! 🌆' : 'Доброй ночи! 🌙';
+  document.getElementById('greeting').textContent = greeting;
+  document.getElementById('dashTitle').textContent = greeting;
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function updateQuote() {
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  document.getElementById('quoteText').textContent = quote.text;
+  document.getElementById('quoteAuthor').textContent = '— ' + quote.author;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openTaskModal() {
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDesc').value = '';
+  document.getElementById('taskDate').value = TODAY;
+  document.getElementById('taskTime').value = '';
+  document.getElementById('taskRecurring').checked = false;
+  document.getElementById('recurringOptions').style.display = 'none';
+  selectTaskCategory('other', document.querySelector('.category-select-btn[data-cat="other"]'));
+  selectTaskPriority('medium', document.querySelector('.priority-select-btn[data-pri="medium"]'));
+  openModal('taskModal');
+}
+
+document.getElementById('taskRecurring')?.addEventListener('change', (e) => {
+  document.getElementById('recurringOptions').style.display = e.target.checked ? 'block' : 'none';
+});
+
+function openProjectModal() {
+  document.getElementById('projectTitle').value = '';
+  document.getElementById('projectDesc').value = '';
+  document.getElementById('projectSubject').value = '';
+  document.getElementById('projectDeadline').value = '';
+  document.getElementById('projectLinks').value = '';
+  document.getElementById('projectChecklist').value = '';
+  openModal('projectModal');
+}
+
+function openDeadlineModal() {
+  document.getElementById('deadlineTitle').value = '';
+  document.getElementById('deadlineDesc').value = '';
+  document.getElementById('deadlineDate').value = TODAY;
+  document.getElementById('deadlinePriority').value = 'medium';
+  openModal('deadlineModal');
+}
+
+function openScheduleModal() {
+  document.getElementById('schedSubject').value = '';
+  document.getElementById('schedDate').value = TODAY;
+  document.getElementById('schedStart').value = '';
+  document.getElementById('schedEnd').value = '';
+  document.getElementById('schedRoom').value = '';
+  document.getElementById('schedTeacher').value = '';
+  document.getElementById('schedType').value = 'lecture';
+  openModal('scheduleModal');
+}
+
+function openHabitModal() {
+  document.getElementById('habitName').value = '';
+  document.getElementById('habitFreq').value = 'daily';
+  openModal('habitModal');
+}
+
+function openSleepModal() {
+  document.getElementById('sleepStart').value = '';
+  document.getElementById('sleepEnd').value = '';
+  document.getElementById('sleepQuality').value = 7;
+  document.getElementById('sleepQualityValue').textContent = '7';
+  document.getElementById('sleepNotes').value = '';
+  openModal('sleepModal');
+}
+
+function openGoalModal() {
+  document.getElementById('goalTitle').value = '';
+  document.getElementById('goalDesc').value = '';
+  document.getElementById('goalDate').value = '';
+  openModal('goalModal');
+}
+
+function openNoteModal() {
+  document.getElementById('noteTitle').value = '';
+  document.getElementById('noteContent').value = '';
+  openModal('noteModal');
+}
+
+function openCustomTimer() {
+  document.getElementById('customHours').value = 0;
+  document.getElementById('customMinutes').value = 25;
+  openModal('customTimerModal');
+}
+
+function openImportExportModal() { openModal('importExportModal'); }
+
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+});
+
+function selectTaskCategory(cat, btn) {
+  state.selectedTaskCategory = cat;
+  document.querySelectorAll('#taskModal .btn[data-cat]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function selectTaskPriority(pri, btn) {
+  state.selectedTaskPriority = pri;
+  document.querySelectorAll('#taskModal .btn[data-pri]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function selectSchedColor(color, btn) {
+  state.selectedSchedColor = color;
+  document.querySelectorAll('#scheduleModal button[onclick^="selectSchedColor"]').forEach(b => b.style.borderColor = 'transparent');
+  if (btn) btn.style.borderColor = 'var(--text-primary)';
+}
+
+function selectNoteColor(color, btn) {
+  state.selectedNoteColor = color;
+  document.querySelectorAll('#noteModal button[onclick^="selectNoteColor"]').forEach(b => b.style.borderColor = 'transparent');
+  if (btn) btn.style.borderColor = 'var(--text-primary)';
+}
+
+document.getElementById('sleepQuality')?.addEventListener('input', (e) => {
+  document.getElementById('sleepQualityValue').textContent = e.target.value;
+});
+
+function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { alert('Введи название!'); return; }
+  const isRecurring = document.getElementById('taskRecurring').checked;
+  data.tasks.push({
+    id: Date.now(), title: title,
+    description: document.getElementById('taskDesc').value.trim(),
+    dueDate: document.getElementById('taskDate').value || TODAY,
+    dueTime: document.getElementById('taskTime').value,
+    category: state.selectedTaskCategory,
+    priority: state.selectedTaskPriority,
+    completed: false, archived: false,
+    recurring: isRecurring,
+    recurringFreq: isRecurring ? document.getElementById('taskRecurringFreq').value : null,
+    createdAt: new Date().toISOString()
+  });
+  save(); renderAll(); closeModal('taskModal'); createConfetti();
+}
+
+function toggleTask(id) {
+  const task = data.tasks.find(t => t.id === id);
+  if (task) {
+    task.completed = !task.completed;
+    if (task.completed) createConfetti();
+    save(); renderAll();
+  }
+}
+
+function deleteTask(id) {
+  if (confirm('Удалить задачу?')) {
+    data.tasks = data.tasks.filter(t => t.id !== id);
+    save(); renderAll();
+  }
+}
+
+function archiveTask(id) {
+  const task = data.tasks.find(t => t.id === id);
+  if (task) { task.archived = !task.archived; save(); renderAll(); }
+}
+
+function filterTasks(filter, btn) {
+  state.currentFilter = filter;
+  document.querySelectorAll('#tasks .btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  const list = document.getElementById('tasksList');
+  if (!list) return;
+  let tasks = [...data.tasks];
+  if (state.currentFilter === 'today') tasks = tasks.filter(t => t.dueDate === TODAY && !t.archived);
+  else if (state.currentFilter === 'week') {
+    const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() + 7);
+    tasks = tasks.filter(t => t.dueDate >= TODAY && t.dueDate <= weekEnd.toISOString().split('T')[0] && !t.archived);
+  } else if (state.currentFilter === 'done') tasks = tasks.filter(t => t.completed && !t.archived);
+  else if (state.currentFilter === 'recurring') tasks = tasks.filter(t => t.recurring && !t.archived);
+  else tasks = tasks.filter(t => !t.archived);
+  if (state.currentCategory !== 'all') tasks = tasks.filter(t => t.category === state.currentCategory);
+  tasks.sort((a, b) => (a.completed - b.completed) || (a.dueDate || '').localeCompare(b.dueDate || ''));
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><div>Нет задач</div></div>';
+    return;
+  }
+  list.innerHTML = tasks.map(t => {
+    const cat = categoryInfo[t.category] || categoryInfo.other;
+    return `<div class="task-item cat-${t.category} priority-${t.priority} ${t.completed ? 'completed' : ''}">
+      <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})">
+      <div class="task-content">
+        <div class="task-title">${t.title} ${t.recurring ? '<span style="font-size:11px;opacity:0.6">🔄</span>' : ''}</div>
+        ${t.description ? `<div style="font-size:12px;opacity:0.6;margin-bottom:4px">${t.description}</div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${t.dueDate ? `<span class="task-badge"><i class="fas fa-calendar"></i>${t.dueDate}${t.dueTime ? ' ' + t.dueTime : ''}</span>` : ''}
+          <span class="task-badge">${cat.icon} ${cat.name}</span>
+          ${t.recurring ? `<span class="task-badge">🔄 ${t.recurringFreq === 'daily' ? 'Ежедневно' : t.recurringFreq === 'weekly' ? 'Еженедельно' : 'Ежемесячно'}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;opacity:0;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+        <button class="schedule-action-btn" onclick="archiveTask(${t.id})"><i class="fas ${t.archived ? 'fa-box-open' : 'fa-box'}"></i></button>
+        <button class="schedule-action-btn" onclick="deleteTask(${t.id})" style="color:#ef4444"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveProject() {
+  const title = document.getElementById('projectTitle').value.trim();
+  if (!title) { alert('Введи название!'); return; }
+  const checklistStr = document.getElementById('projectChecklist').value.trim();
+  const linksStr = document.getElementById('projectLinks').value.trim();
+  data.projects.push({
+    id: Date.now(), title: title,
+    description: document.getElementById('projectDesc').value.trim(),
+    subject: document.getElementById('projectSubject').value.trim(),
+    deadline: document.getElementById('projectDeadline').value,
+    links: linksStr ? linksStr.split(',').map(l => l.trim()) : [],
+    checklist: checklistStr ? checklistStr.split(',').map(c => ({ text: c.trim(), done: false })) : [],
+    timeSpent: 0,
+    createdAt: new Date().toISOString()
+  });
+  save(); renderProjects(); closeModal('projectModal'); createConfetti();
+}
+
+function deleteProject(id) {
+  if (confirm('Удалить проект?')) {
+    data.projects = data.projects.filter(p => p.id !== id);
+    save(); renderProjects();
+  }
+}
+
+function toggleChecklist(projectId, itemIndex) {
+  const project = data.projects.find(p => p.id === projectId);
+  if (project && project.checklist[itemIndex]) {
+    project.checklist[itemIndex].done = !project.checklist[itemIndex].done;
+    save(); renderProjects();
+  }
+}
+
+function addTimeToProject(projectId) {
+  const minutes = prompt('Сколько минут потрачено?');
+  if (minutes && !isNaN(minutes)) {
+    const project = data.projects.find(p => p.id === projectId);
+    if (project) {
+      project.timeSpent = (project.timeSpent || 0) + parseInt(minutes);
+      save(); renderProjects();
+    }
+  }
+}
+
+function renderProjects() {
+  const list = document.getElementById('projectsList');
+  if (!list) return;
+  if (data.projects.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-folder"></i><div>Нет проектов</div></div>';
+    return;
+  }
+  list.innerHTML = data.projects.map(p => {
+    const doneCount = p.checklist ? p.checklist.filter(c => c.done).length : 0;
+    const totalCount = p.checklist ? p.checklist.length : 0;
+    const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+    return `<div class="card" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${p.title}</div>
+          ${p.subject ? `<div style="font-size:12px;opacity:0.7;margin-bottom:4px">📘 ${p.subject}</div>` : ''}
+          ${p.deadline ? `<div style="font-size:12px;opacity:0.7">📅 До ${p.deadline}</div>` : ''}
+        </div>
+        <button class="schedule-action-btn" onclick="deleteProject(${p.id})"><i class="fas fa-trash"></i></button>
+      </div>
+      ${p.description ? `<div style="font-size:13px;opacity:0.8;margin-bottom:12px">${p.description}</div>` : ''}
+      ${p.links && p.links.length > 0 ? `<div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px;opacity:0.7">🔗 Ссылки</div>
+        ${p.links.map(l => `<a href="${l}" target="_blank" style="display:block;font-size:12px;color:var(--primary);margin-bottom:4px;word-break:break-all">${l}</a>`).join('')}
+      </div>` : ''}
+      ${p.checklist && p.checklist.length > 0 ? `<div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px;opacity:0.7">✅ Чек-лист (${doneCount}/${totalCount})</div>
+        <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;margin-bottom:8px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:3px;width:${progress}%"></div>
+        </div>
+        ${p.checklist.map((c, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px">
+          <input type="checkbox" ${c.done ? 'checked' : ''} onchange="toggleChecklist(${p.id},${i})" class="task-checkbox" style="width:16px;height:16px">
+          <span style="${c.done ? 'text-decoration:line-through;opacity:0.6' : ''}">${c.text}</span>
+        </div>`).join('')}
+      </div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;opacity:0.7">⏱️ Потрачено: ${Math.floor((p.timeSpent || 0) / 60)}ч ${((p.timeSpent || 0) % 60)}м</div>
+        <button class="btn btn-secondary btn-sm" onclick="addTimeToProject(${p.id})"><i class="fas fa-plus"></i> Время</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveDeadline() {
+  const title = document.getElementById('deadlineTitle').value.trim();
+  const dueDate = document.getElementById('deadlineDate').value;
+  if (!title || !dueDate) { alert('Заполни название и дату!'); return; }
+  data.deadlines.push({
+    id: Date.now(), title: title,
+    description: document.getElementById('deadlineDesc').value.trim(),
+    dueDate: dueDate, priority: document.getElementById('deadlinePriority').value,
+    completed: false, createdAt: new Date().toISOString()
+  });
+  save(); renderAll(); closeModal('deadlineModal');
+}
+
+function toggleDeadline(id) {
+  const d = data.deadlines.find(x => x.id === id);
+  if (d) { d.completed = !d.completed; if (d.completed) createConfetti(); save(); renderAll(); }
+}
+
+function deleteDeadline(id) {
+  if (confirm('Удалить дедлайн?')) {
+    data.deadlines = data.deadlines.filter(x => x.id !== id);
+    save(); renderAll();
+  }
+}
+
+function getDeadlineStatus(dueDate) {
+  const now = new Date(); const deadline = new Date(dueDate);
+  const diff = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return { class: 'overdue', label: `Просрочено (${Math.abs(diff)} дн.)`, color: '#ef4444' };
+  if (diff === 0) return { class: 'urgent', label: 'Сегодня', color: '#ef4444' };
+  if (diff <= 3) return { class: 'urgent', label: `${diff} дн.`, color: '#ef4444' };
+  if (diff <= 7) return { class: 'warning', label: `${diff} дн.`, color: '#3b82f6' };
+  return { class: 'ok', label: `${diff} дн.`, color: '#10b981' };
+}
+
+function renderDeadlines() {
+  const list = document.getElementById('deadlinesList');
+  if (!list) return;
+  const deadlines = [...data.deadlines].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  document.getElementById('deadlineTotal').textContent = deadlines.length;
+  document.getElementById('deadlineUrgent').textContent = deadlines.filter(d => { const s = getDeadlineStatus(d.dueDate); return s.class === 'urgent' || s.class === 'overdue'; }).length;
+  document.getElementById('deadlineDone').textContent = deadlines.filter(d => d.completed).length;
+  if (deadlines.length === 0) {
+    list.innerHTML = '<div class="empty-state"><i class="fas fa-flag"></i><div>Нет дедлайнов</div></div>';
+    return;
+  }
+  list.innerHTML = deadlines.map(d => {
+    const status = getDeadlineStatus(d.dueDate);
+    return `<div class="card" style="padding:16px;margin-bottom:12px;border-left:4px solid ${status.color}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <input type="checkbox" class="task-checkbox" ${d.completed ? 'checked' : ''} onchange="toggleDeadline(${d.id})">
+        <div style="flex:1">
+          <div style="font-weight:600;margin-bottom:4px;${d.completed ? 'text-decoration:line-through;opacity:0.6' : ''}">${d.title}</div>
+          ${d.description ? `<div style="font-size:12px;opacity:0.7;margin-bottom:4px">${d.description}</div>` : ''}
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="task-badge" style="background:${status.color}20;color:${status.color}"><i class="fas fa-flag"></i>${status.label}</span>
+            <span class="task-badge"><i class="fas fa-calendar"></i>${d.dueDate}</span>
+          </div>
+        </div>
+        <button class="schedule-action-btn" onclick="deleteDeadline(${d.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveSchedule() {
+  const subject = document.getElementById('schedSubject').value.trim();
+  const date = document.getElementById('schedDate').value;
+  const start = document.getElementById('schedStart').value;
+  const end = document.getElementById('schedEnd').value;
+  if (!subject || !date || !start || !end) { alert('Заполните обязательные поля!'); return; }
+  data.schedule.push({
+    id: Date.now(), subject: subject, date: date,
+    dayOfWeek: parseInt(document.getElementById('schedDay').value),
+    startTime: start, endTime: end,
+    room: document.getElementById('schedRoom').value.trim(),
+    teacher: document.getElementById('schedTeacher').value.trim(),
+    type: document.getElementById('schedType').value,
+    color: state.selectedSchedColor,
+    attended: null, notes: ''
+  });
+  save(); renderSchedule(); closeModal('scheduleModal'); createConfetti();
+}
+
+function deleteSchedule(id) {
+  if (confirm('Удалить пару?')) {
+    data.schedule = data.schedule.filter(s => s.id !== id);
+    save(); renderSchedule();
+  }
+}
+
+function editSchedule(id) {
+  const item = data.schedule.find(s => s.id === id);
+  if (!item) return;
+  document.getElementById('schedSubject').value = item.subject;
+  document.getElementById('schedDate').value = item.date;
+  document.getElementById('schedStart').value = item.startTime;
+  document.getElementById('schedEnd').value = item.endTime;
+  document.getElementById('schedRoom').value = item.room || '';
+  document.getElementById('schedTeacher').value = item.teacher || '';
+  document.getElementById('schedType').value = item.type || 'lecture';
+  selectSchedColor(item.color, null);
+  data.schedule = data.schedule.filter(s => s.id !== id);
+  openModal('scheduleModal');
+}
+
+function markAttendance(id, status) {
+  const item = data.schedule.find(s => s.id === id);
+  if (item) {
+    item.attended = status;
+    const key = `${item.date}_${item.id}`;
+    data.attendance[key] = status;
+    save(); renderSchedule();
+  }
+}
+
+function addScheduleNote(id) {
+  const item = data.schedule.find(s => s.id === id);
+  if (!item) return;
+  const note = prompt('Заметка к паре:', item.notes || '');
+  if (note !== null) { item.notes = note; save(); renderSchedule(); }
+}
+
+function copyRoom(room) {
+  if (room) { navigator.clipboard.writeText(room); alert('Скопировано: ' + room); }
+}
+
+function openLink(url) {
+  if (url) window.open(url.startsWith('http') ? url : 'https://' + url, '_blank');
+}
+
+function setScheduleView(view, btn) {
+  state.scheduleView = view;
+  document.querySelectorAll('#schedule .btn-secondary').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderSchedule();
+}
+
+function navigateSchedule(dir) {
+  if (state.scheduleView === 'day') state.currentDate.setDate(state.currentDate.getDate() + dir);
+  else if (state.scheduleView === 'week') state.currentDate.setDate(state.currentDate.getDate() + dir * 7);
+  else if (state.scheduleView === 'month') state.currentDate.setMonth(state.currentDate.getMonth() + dir);
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const list = document.getElementById('scheduleList');
+  if (!list) return;
+  const search = document.getElementById('scheduleSearch')?.value.toLowerCase() || '';
+  const filterSubject = document.getElementById('filterSubject')?.value || '';
+  const filterType = document.getElementById('filterType')?.value || '';
+  let items = [...data.schedule];
+  if (search) items = items.filter(s => s.subject.toLowerCase().includes(search) || (s.room || '').toLowerCase().includes(search));
+  if (filterSubject) items = items.filter(s => s.subject === filterSubject);
+  if (filterType) items = items.filter(s => s.type === filterType);
+  items.sort((a, b) => {
+    const dateCompare = a.date.localeCompare(b.date);
+    if (dateCompare !== 0) return dateCompare;
+    return a.startTime.localeCompare(b.startTime);
+  });
+  const dateDisplay = document.getElementById('scheduleDateDisplay');
+  if (dateDisplay) {
+    if (state.scheduleView === 'day') dateDisplay.textContent = state.currentDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+    else if (state.scheduleView === 'week') {
+      const start = new Date(state.currentDate); start.setDate(start.getDate() - start.getDay() + 1);
+      const end = new Date(start); end.setDate(end.getDate() + 6);
+      dateDisplay.textContent = `${start.toLocaleDateString('ru-RU')} - ${end.toLocaleDateString('ru-RU')}`;
+    } else dateDisplay.textContent = state.currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  }
+  const subjectFilter = document.getElementById('filterSubject');
+  if (subjectFilter) {
+    const subjects = [...new Set(data.schedule.map(s => s.subject))].sort();
+    const currentValue = subjectFilter.value;
+    subjectFilter.innerHTML = '<option value="">Все предметы</option>' + subjects.map(s => `<option value="${s}" ${s === currentValue ? 'selected' : ''}>${s}</option>`).join('');
+  }
+  if (state.scheduleView === 'day') {
+    const dateStr = state.currentDate.toISOString().split('T')[0];
+    const dayItems = items.filter(s => s.date === dateStr);
+    const isToday = dateStr === TODAY;
+    if (dayItems.length === 0) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-day"></i><div>Нет пар на этот день</div></div>';
+      return;
+    }
+    let html = `<div class="card" style="padding:20px;${isToday ? 'border:2px solid var(--primary)' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700;text-transform:capitalize">${isToday ? '📍 ' : ''}${state.currentDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <div style="font-size:12px;opacity:0.7"><i class="fas fa-clock"></i> ${dayItems.length} пар</div>
+      </div>
+      ${dayItems.map(item => renderScheduleItem(item)).join('')}
+    </div>`;
+    if (data.weekNotes) {
+      html += `<div class="card" style="padding:20px;margin-top:16px">
+        <div style="font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px"><i class="fas fa-sticky-note" style="color:var(--primary)"></i> Заметки на неделю</div>
+        <div style="min-height:60px;padding:12px;background:var(--bg-tertiary);border-radius:8px;font-size:13px;line-height:1.6">${data.weekNotes}</div>
+      </div>`;
+    }
+    const weekDeadlines = data.deadlines.filter(d => {
+      const dDate = new Date(d.dueDate);
+      const weekStart = new Date(state.currentDate); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+      const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+      return dDate >= weekStart && dDate <= weekEnd && !d.completed;
+    }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    if (weekDeadlines.length > 0) {
+      html += `<div class="card" style="padding:20px;margin-top:16px">
+        <div style="font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px"><i class="fas fa-flag" style="color:#ef4444"></i> Дедлайны на этой неделе</div>
+        ${weekDeadlines.map(d => `<div style="display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:6px;background:rgba(239,68,68,0.05);border-left:3px solid #ef4444;border-radius:6px;font-size:12px">
+          <i class="fas fa-exclamation-circle" style="color:#ef4444"></i>
+          <span style="flex:1">${d.title}</span>
+          <span style="opacity:0.7">${d.dueDate}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    list.innerHTML = html;
+  } else if (state.scheduleView === 'week') {
+    const start = new Date(state.currentDate); start.setDate(start.getDate() - start.getDay() + 1);
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start); date.setDate(start.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayItems = items.filter(s => s.date === dateStr);
+      const isToday = dateStr === TODAY;
+      if (dayItems.length > 0 || isToday) {
+        html += `<div class="card" style="padding:20px;margin-bottom:16px;${isToday ? 'border:2px solid var(--primary)' : ''}">
+          <div style="font-size:16px;font-weight:700;margin-bottom:16px;text-transform:capitalize">${isToday ? ' ' : ''}${date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          ${dayItems.map(item => renderScheduleItem(item)).join('')}
+        </div>`;
+      }
+    }
+    list.innerHTML = html || '<div class="empty-state"><i class="fas fa-calendar-week"></i><div>Нет пар на этой неделе</div></div>';
+  } else if (state.scheduleView === 'month') {
+    const year = state.currentDate.getFullYear();
+    const month = state.currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">';
+    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(day => {
+      html += `<div style="text-align:center;font-size:12px;font-weight:600;opacity:0.6;padding:8px">${day}</div>`;
+    });
+    const firstDay = new Date(year, month, 1).getDay() || 7;
+    for (let i = 1; i < firstDay; i++) html += '<div></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayItems = items.filter(s => s.date === dateStr);
+      const isToday = dateStr === TODAY;
+      html += `<div style="border:1px solid var(--border);border-radius:8px;padding:8px;min-height:80px;${isToday ? 'background:rgba(139,92,246,0.1);border-color:var(--primary)' : ''}">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px">${day}</div>
+        ${dayItems.slice(0, 3).map(item => `<div style="font-size:9px;padding:2px;margin-bottom:2px;border-radius:4px;background:${item.color}25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.startTime} ${item.subject}</div>`).join('')}
+        ${dayItems.length > 3 ? `<div style="font-size:9px;opacity:0.6">+${dayItems.length - 3} ещё</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+    list.innerHTML = html;
+  } else {
+    if (items.length === 0) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-list"></i><div>Нет пар</div></div>';
+      return;
+    }
+    const grouped = {};
+    items.forEach(item => { if (!grouped[item.date]) grouped[item.date] = []; grouped[item.date].push(item); });
+    let html = '<div style="display:flex;flex-direction:column;gap:16px">';
+    Object.keys(grouped).sort().forEach(date => {
+      const dateItems = grouped[date];
+      const dateObj = new Date(date);
+      html += `<div class="card" style="padding:16px">
+        <div style="font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px"><i class="fas fa-calendar" style="color:var(--primary)"></i> ${dateObj.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        ${dateItems.map(item => renderScheduleItem(item)).join('')}
+      </div>`;
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  }
+}
+
+function renderScheduleItem(item) {
+  const now = new Date();
+  const itemDate = new Date(item.date + 'T' + item.startTime);
+  const itemEndDate = new Date(item.date + 'T' + item.endTime);
+  const isNow = now >= itemDate && now <= itemEndDate;
+  const isUpcoming = now < itemDate && (itemDate - now) < 3600000;
+  const isPast = now > itemEndDate;
+  const typeIcon = typeIcons[item.type] || '📚';
+  let statusClass = '';
+  if (isNow) statusClass = 'now';
+  else if (isUpcoming) statusClass = 'upcoming';
+  else if (isPast) statusClass = 'past';
+  return `<div class="schedule-item ${statusClass}" style="border-left:4px solid ${item.color}">
+    <div class="schedule-item-time">${item.startTime}<br><span style="font-size:12px;opacity:0.7">${item.endTime}</span></div>
+    <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:${item.color}20;color:${item.color}">${typeIcon}</div>
+    <div class="schedule-item-content">
+      <div class="schedule-item-subject">${item.subject}</div>
+      <div class="schedule-item-details">
+        ${item.room ? `<span class="schedule-item-detail"><i class="fas fa-door-open"></i>${item.room}</span>` : ''}
+        ${item.teacher ? `<span class="schedule-item-detail"><i class="fas fa-user"></i>${item.teacher}</span>` : ''}
+        ${item.notes ? `<span class="schedule-item-detail"><i class="fas fa-sticky-note"></i>Есть заметка</span>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        ${item.attended === true ? '<span style="font-size:12px;color:#10b981"><i class="fas fa-check"></i> Посещено</span>' : ''}
+        ${item.attended === false ? '<span style="font-size:12px;color:#ef4444"><i class="fas fa-times"></i> Пропущено</span>' : ''}
+      </div>
+    </div>
+    <div style="position:absolute;top:12px;right:12px;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600;text-transform:uppercase;background:${item.type === 'lecture' ? '#3b82f6' : item.type === 'practice' ? '#10b981' : item.type === 'lab' ? '#f59e0b' : '#06b6d4'};color:white">${typeIcon}</div>
+    <div class="schedule-item-actions">
+      ${item.room ? `<button class="schedule-action-btn" onclick="copyRoom('${item.room}')" title="Копировать"><i class="fas fa-copy"></i></button>` : ''}
+      ${item.room && item.room.startsWith('http') ? `<button class="schedule-action-btn" onclick="openLink('${item.room}')" title="Открыть"><i class="fas fa-external-link-alt"></i></button>` : ''}
+      <button class="schedule-action-btn" onclick="markAttendance(${item.id},true)" title="Посещено"><i class="fas fa-check"></i></button>
+      <button class="schedule-action-btn" onclick="markAttendance(${item.id},false)" title="Пропущено"><i class="fas fa-times"></i></button>
+      <button class="schedule-action-btn" onclick="addScheduleNote(${item.id})" title="Заметка"><i class="fas fa-sticky-note"></i></button>
+      <button class="schedule-action-btn" onclick="editSchedule(${item.id})" title="Редактировать"><i class="fas fa-edit"></i></button>
+      <button class="schedule-action-btn" onclick="deleteSchedule(${item.id})" title="Удалить" style="color:#ef4444"><i class="fas fa-trash"></i></button>
+    </div>
+  </div>`;
+}
+
+function saveHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if (!name) { alert('Введи название!'); return; }
+  data.habits.push({ id: Date.now(), name: name, frequency: document.getElementById('habitFreq').value, completions: {}, createdAt: new Date().toISOString() });
+  save(); renderAll(); closeModal('habitModal');
+}
+
+function toggleHabitDay(habitId, date) {
+  const habit = data.habits.find(h => h.id === habitId);
+  if (!habit) return;
+  if (!habit.completions[date]) habit.completions[date] = 'done';
+  else if (habit.completions[date] === 'done') habit.completions[date] = 'skipped';
+  else delete habit.completions[date];
+  save(); renderAll();
+}
+
+function deleteHabit(id) {
+  if (confirm('Удалить привычку?')) {
+    data.habits = data.habits.filter(h => h.id !== id);
+    save(); renderAll();
+  }
+}
+
+function getStreak(habit) {
+  let streak = 0; const d = new Date();
+  while (habit.completions[d.toISOString().split('T')[0]] === 'done') { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+
+function renderHabits() {
+  const list = document.getElementById('habitsList');
+  if (!list) return;
+  if (data.habits.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-fire"></i><div>Добавь первую привычку</div></div>';
+    return;
+  }
+  const today = new Date();
+  const days = [];
+  for (let i = 29; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d.toISOString().split('T')[0]); }
+  list.innerHTML = data.habits.map(habit => {
+    const streak = getStreak(habit);
+    const monthDone = days.filter(d => habit.completions[d] === 'done').length;
+    const monthSkipped = days.filter(d => habit.completions[d] === 'skipped').length;
+    return `<div class="card" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${habit.name}</div>
+          <div style="font-size:12px;opacity:0.7">${habit.frequency === 'daily' ? 'Ежедневно' : 'Еженедельно'} • 🔥 <strong style="color:#f59e0b">${streak}</strong> дн.</div>
+        </div>
+        <button class="schedule-action-btn" onclick="deleteHabit(${habit.id})"><i class="fas fa-trash"></i></button>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;opacity:0.7">
+          <span>Выполнено: ${monthDone}/30</span><span>Пропущено: ${monthSkipped}</span>
+        </div>
+        <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,#10b981,#059669);border-radius:3px;width:${(monthDone/30)*100}%"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px">
+        ${days.map(d => {
+          const date = new Date(d);
+          const isToday = d === TODAY;
+          const status = habit.completions[d];
+          return `<div style="text-align:center">
+            <div style="font-size:9px;opacity:0.6;margin-bottom:2px">${date.getDate()}</div>
+            <div class="habit-cell ${status === 'done' ? 'done' : status === 'skipped' ? 'skipped' : ''} ${isToday ? 'today' : ''}" onclick="toggleHabitDay(${habit.id},'${d}')">
+              ${status === 'done' ? '<i class="fas fa-check" style="font-size:10px"></i>' : status === 'skipped' ? '<i class="fas fa-times" style="font-size:10px"></i>' : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;font-size:10px;opacity:0.7">
+        <div style="display:flex;align-items:center;gap:4px"><i class="fas fa-check-circle" style="color:#10b981"></i> Выполнено</div>
+        <div style="display:flex;align-items:center;gap:4px"><i class="fas fa-times-circle" style="color:#ef4444"></i> Пропущено</div>
+        <div style="display:flex;align-items:center;gap:4px"><i class="fas fa-circle" style="color:var(--text-tertiary)"></i> Не отмечено</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveSleep() {
+  const start = document.getElementById('sleepStart').value;
+  const end = document.getElementById('sleepEnd').value;
+  if (!start || !end) { alert('Укажи время!'); return; }
+  let startMin = parseInt(start.split(':')[0]) * 60 + parseInt(start.split(':')[1]);
+  let endMin = parseInt(end.split(':')[0]) * 60 + parseInt(end.split(':')[1]);
+  if (endMin < startMin) endMin += 24 * 60;
+  const duration = (endMin - startMin) / 60;
+  data.sleep.push({
+    id: Date.now(), date: TODAY, start: start, end: end,
+    duration: duration, quality: parseInt(document.getElementById('sleepQuality').value),
+    notes: document.getElementById('sleepNotes').value.trim()
+  });
+  save(); renderSleep(); closeModal('sleepModal');
+}
+
+function deleteSleep(id) {
+  if (confirm('Удалить запись?')) {
+    data.sleep = data.sleep.filter(s => s.id !== id);
+    save(); renderSleep();
+  }
+}
+
+function renderSleep() {
+  const avgEl = document.getElementById('sleepAvg');
+  const bestEl = document.getElementById('sleepBest');
+  const recEl = document.getElementById('sleepRecords');
+  const listEl = document.getElementById('sleepList');
+  if (!avgEl) return;
+  const weekSleep = data.sleep.filter(s => {
+    const d = new Date(s.date);
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    return d >= weekAgo;
+  });
+  const avg = weekSleep.length > 0 ? (weekSleep.reduce((sum, s) => sum + s.duration, 0) / weekSleep.length).toFixed(1) : 0;
+  const best = data.sleep.length > 0 ? Math.max(...data.sleep.map(s => s.duration)).toFixed(1) : 0;
+  avgEl.textContent = avg + 'ч';
+  bestEl.textContent = best + 'ч';
+  recEl.textContent = data.sleep.length;
+  if (data.sleep.length === 0) {
+    listEl.innerHTML = '<div class="empty-state"><i class="fas fa-moon"></i><div>Нет записей</div></div>';
+    return;
+  }
+  listEl.innerHTML = [...data.sleep].reverse().map(s => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:var(--bg-tertiary);border-radius:12px">
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white"><i class="fas fa-moon"></i></div>
+      <div style="flex:1">
+        <div style="font-weight:600">${s.date}</div>
+        <div style="font-size:12px;opacity:0.7">${s.start} - ${s.end} • ${s.duration.toFixed(1)}ч</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:600;color:${s.quality >= 7 ? '#10b981' : s.quality >= 4 ? '#f59e0b' : '#ef4444'}">${s.quality}/10</div>
+        <div style="font-size:10px;opacity:0.6">Качество</div>
+      </div>
+      <button class="schedule-action-btn" onclick="deleteSleep(${s.id})"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+}
+
+function saveGoal() {
+  const title = document.getElementById('goalTitle').value.trim();
+  if (!title) { alert('Введи название!'); return; }
+  data.goals.push({
+    id: Date.now(), title: title,
+    description: document.getElementById('goalDesc').value.trim(),
+    targetDate: document.getElementById('goalDate').value,
+    progress: 0, createdAt: new Date().toISOString()
+  });
+  save(); renderAll(); closeModal('goalModal');
+}
+
+function updateGoalProgress(id, value) {
+  const goal = data.goals.find(g => g.id === id);
+  if (goal) { goal.progress = parseInt(value); save(); renderGoals(); }
+}
+
+function deleteGoal(id) {
+  if (confirm('Удалить цель?')) {
+    data.goals = data.goals.filter(g => g.id !== id);
+    save(); renderAll();
+  }
+}
+
+function renderGoals() {
+  const list = document.getElementById('goalsList');
+  if (!list) return;
+  if (data.goals.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-bullseye"></i><div>Добавь первую цель</div></div>';
+    return;
+  }
+  list.innerHTML = data.goals.map(g => `
+    <div class="card" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${g.title}</div>
+          ${g.description ? `<div style="font-size:12px;opacity:0.7;margin-bottom:4px">${g.description}</div>` : ''}
+          ${g.targetDate ? `<div style="font-size:11px;opacity:0.6"><i class="fas fa-flag"></i> До ${g.targetDate}</div>` : ''}
+        </div>
+        <button class="schedule-action-btn" onclick="deleteGoal(${g.id})"><i class="fas fa-trash"></i></button>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+          <span style="opacity:0.7">Прогресс</span>
+          <span style="font-weight:700;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent">${g.progress}%</span>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;width:${g.progress}%"></div>
+        </div>
+      </div>
+      <input type="range" min="0" max="100" value="${g.progress}" onchange="updateGoalProgress(${g.id}, this.value)" style="width:100%">
+    </div>
+  `).join('');
+}
+
+function setPomodoroMode(mode, time, btn) {
+  state.pomodoroMode = mode; pausePomodoro(); state.pomodoroTime = time;
+  const modeNames = { focus: 'ФОКУС', short: 'КОРОТКИЙ ПЕРЕРЫВ', long: 'ДЛИННЫЙ ПЕРЕРЫВ', custom: 'СВОЙ ТАЙМЕР' };
+  document.getElementById('pomodoroMode').textContent = modeNames[mode] || 'ФОКУС';
+  document.querySelectorAll('#pomodoro .btn-secondary').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  updatePomodoroDisplay();
+}
+
+function updatePomodoroDisplay() {
+  const hours = Math.floor(state.pomodoroTime / 3600);
+  const min = Math.floor((state.pomodoroTime % 3600) / 60).toString().padStart(2, '0');
+  const sec = (state.pomodoroTime % 60).toString().padStart(2, '0');
+  document.getElementById('pomodoroTimer').textContent = hours > 0 ? `${hours}:${min}:${sec}` : `${min}:${sec}`;
+}
+
+function startPomodoro() {
+  if (state.pomodoroRunning) return;
+  state.pomodoroRunning = true; state.pomodoroStartTime = Date.now();
+  document.getElementById('pomStart').style.display = 'none';
+  document.getElementById('pomPause').style.display = 'inline-flex';
+  state.pomodoroInterval = setInterval(() => {
+    state.pomodoroTime--; updatePomodoroDisplay();
+    if (state.pomodoroTime <= 0) {
+      clearInterval(state.pomodoroInterval); state.pomodoroRunning = false;
+      document.getElementById('pomStart').style.display = 'inline-flex';
+      document.getElementById('pomPause').style.display = 'none';
+      const elapsed = Math.floor((Date.now() - state.pomodoroStartTime) / 60000);
+      if (state.pomodoroMode === 'focus') {
+        data.pomodoroCount++; data.focusMinutes += elapsed;
+        document.getElementById('pomodoroCount').textContent = data.pomodoroCount;
+        createConfetti(); alert('🎉 Сессия завершена!');
+        data.timerHistory.unshift({ date: new Date().toLocaleString('ru-RU'), duration: elapsed, type: 'Фокус' });
+      } else {
+        alert('☕ Перерыв окончен!');
+        data.timerHistory.unshift({ date: new Date().toLocaleString('ru-RU'), duration: elapsed, type: state.pomodoroMode === 'short' ? 'Короткий перерыв' : 'Длинный перерыв' });
+      }
+      if (data.timerHistory.length > 20) data.timerHistory.pop();
+      save(); resetPomodoro();
+    }
+  }, 1000);
+}
+
+function pausePomodoro() {
+  state.pomodoroRunning = false; clearInterval(state.pomodoroInterval);
+  document.getElementById('pomStart').style.display = 'inline-flex';
+  document.getElementById('pomPause').style.display = 'none';
+}
+
+function resetPomodoro() {
+  pausePomodoro();
+  if (state.pomodoroMode === 'focus') state.pomodoroTime = 25 * 60;
+  else if (state.pomodoroMode === 'short') state.pomodoroTime = 5 * 60;
+  else if (state.pomodoroMode === 'long') state.pomodoroTime = 15 * 60;
+  updatePomodoroDisplay();
+}
+
+function applyCustomTimer() {
+  const hours = parseInt(document.getElementById('customHours').value) || 0;
+  const minutes = parseInt(document.getElementById('customMinutes').value) || 0;
+  state.pomodoroTime = hours * 3600 + minutes * 60;
+  state.pomodoroMode = 'custom';
+  document.getElementById('pomodoroMode').textContent = 'СВОЙ ТАЙМЕР';
+  updatePomodoroDisplay(); closeModal('customTimerModal');
+}
+
+function renderAnalytics() {
+  document.getElementById('anTotalHours').textContent = Math.floor(data.focusMinutes / 60);
+  const totalClasses = data.schedule.filter(s => s.date <= TODAY).length;
+  const attendedClasses = data.schedule.filter(s => s.attended === true).length;
+  document.getElementById('anAttendance').textContent = totalClasses > 0 ? Math.round((attendedClasses / totalClasses) * 100) + '%' : '0%';
+  document.getElementById('anTasksDone').textContent = data.tasks.filter(t => t.completed).length;
+  const avgGoalProgress = data.goals.length > 0 ? Math.round(data.goals.reduce((sum, g) => sum + g.progress, 0) / data.goals.length) : 0;
+  document.getElementById('anGoalsProgress').textContent = avgGoalProgress + '%';
+  
+  // Subject hours
+  const subjectHours = {};
+  data.schedule.forEach(s => {
+    if (!subjectHours[s.subject]) subjectHours[s.subject] = 0;
+    const start = parseInt(s.startTime.split(':')[0]) * 60 + parseInt(s.startTime.split(':')[1]);
+    const end = parseInt(s.endTime.split(':')[0]) * 60 + parseInt(s.endTime.split(':')[1]);
+    subjectHours[s.subject] += (end - start) / 60;
+  });
+  const subjHoursEl = document.getElementById('subjectHoursChart');
+  if (subjHoursEl) {
+    const entries = Object.entries(subjectHours).sort((a, b) => b[1] - a[1]);
+    const maxHours = entries.length > 0 ? entries[0][1] : 1;
+    subjHoursEl.innerHTML = entries.map(([subj, hours]) => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${subj}</span>
+          <span style="opacity:0.7">${hours.toFixed(1)}ч</span>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;width:${(hours/maxHours)*100}%"></div>
+        </div>
+      </div>
+    `).join('') || '<div style="opacity:0.6;text-align:center;padding:20px">Нет данных</div>';
+  }
+  
+  // Time productivity
+  const timeProductivity = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+  data.tasks.filter(t => t.completed && t.completedAt).forEach(t => {
+    const hour = new Date(t.completedAt).getHours();
+    if (hour >= 5 && hour < 12) timeProductivity.morning++;
+    else if (hour >= 12 && hour < 17) timeProductivity.afternoon++;
+    else if (hour >= 17 && hour < 22) timeProductivity.evening++;
+    else timeProductivity.night++;
+  });
+  const timeEl = document.getElementById('timeProductivityChart');
+  if (timeEl) {
+    const maxTime = Math.max(...Object.values(timeProductivity), 1);
+    timeEl.innerHTML = Object.entries(timeProductivity).map(([time, count]) => {
+      const names = { morning: '🌅 Утро (5-12)', afternoon: '☀️ День (12-17)', evening: '🌆 Вечер (17-22)', night: '🌙 Ночь (22-5)' };
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${names[time]}</span>
+          <span style="opacity:0.7">${count} задач</span>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:4px;width:${(count/maxTime)*100}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  // Subject ranking
+  const rankingEl = document.getElementById('subjectRanking');
+  if (rankingEl) {
+    const entries = Object.entries(subjectHours).sort((a, b) => b[1] - a[1]);
+    rankingEl.innerHTML = entries.map(([subj, hours], i) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:var(--bg-tertiary);border-radius:12px">
+        <div style="width:32px;height:32px;border-radius:50%;background:${i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#b45309' : 'var(--border)'};display:flex;align-items:center;justify-content:center;color:white;font-weight:700">${i + 1}</div>
+        <div style="flex:1">
+          <div style="font-weight:600">${subj}</div>
+          <div style="font-size:12px;opacity:0.7">${hours.toFixed(1)} часов</div>
+        </div>
+        ${i === 0 ? '<i class="fas fa-crown" style="color:#fbbf24;font-size:20px"></i>' : ''}
+      </div>
+    `).join('') || '<div style="opacity:0.6;text-align:center;padding:20px">Нет данных</div>';
+  }
+  
+  // Skip patterns
+  const skipPatternsEl = document.getElementById('skipPatterns');
+  if (skipPatternsEl) {
+    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const skipByDay = {};
+    data.schedule.forEach(s => {
+      if (s.attended === false) {
+        skipByDay[s.dayOfWeek] = (skipByDay[s.dayOfWeek] || 0) + 1;
+      }
+    });
+    const maxSkip = Math.max(...Object.values(skipByDay), 1);
+    skipPatternsEl.innerHTML = Object.entries(skipByDay).length > 0 ? Object.entries(skipByDay).map(([day, count]) => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${dayNames[day]}</span>
+          <span style="opacity:0.7">${count} пропусков</span>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:4px;width:${(count/maxSkip)*100}%"></div>
+        </div>
+      </div>
+    `).join('') : '<div style="opacity:0.6;text-align:center;padding:20px">Нет пропусков! 🎉</div>';
+  }
+  
+  // Goals progress
+  const goalsEl = document.getElementById('goalsProgressChart');
+  if (goalsEl) {
+    goalsEl.innerHTML = data.goals.length > 0 ? data.goals.map(g => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${g.title}</span>
+          <span style="opacity:0.7">${g.progress}%</span>
+        </div>
+        <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;width:${g.progress}%"></div>
+        </div>
+      </div>
+    `).join('') : '<div style="opacity:0.6;text-align:center;padding:20px">Нет целей</div>';
+  }
+}
+
+function saveNote() {
+  const title = document.getElementById('noteTitle').value.trim();
+  const content = document.getElementById('noteContent').value.trim();
+  if (!title && !content) { alert('Введи текст!'); return; }
+  data.notes.push({ id: Date.now(), title: title, content: content, color: state.selectedNoteColor, date: new Date().toLocaleDateString('ru-RU') });
+  save(); renderNotes(); closeModal('noteModal');
+}
+
+function deleteNote(id) {
+  if (confirm('Удалить заметку?')) {
+    data.notes = data.notes.filter(n => n.id !== id);
+    save(); renderNotes();
+  }
+}
+
+function renderNotes() {
+  const list = document.getElementById('notesList');
+  if (!list) return;
+  if (data.notes.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-sticky-note"></i><div>Нет заметок</div></div>';
+    return;
+  }
+  list.innerHTML = data.notes.map(n => `
+    <div class="card" style="padding:16px;position:relative;background:${n.color}">
+      <button class="schedule-action-btn" style="position:absolute;top:8px;right:8px;background:#ef4444;color:white;border:none" onclick="deleteNote(${n.id})"><i class="fas fa-trash"></i></button>
+      ${n.title ? `<div style="font-weight:700;font-size:14px;margin-bottom:8px;padding-right:30px">${n.title}</div>` : ''}
+      <div style="font-size:13px;white-space:pre-wrap">${n.content}</div>
+      <div style="font-size:10px;opacity:0.6;margin-top:12px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">${n.date}</div>
+    </div>
+  `).join('');
+}
+
+function editWeekNotes() {
+  const note = prompt('Заметки на неделю:', data.weekNotes);
+  if (note !== null) { data.weekNotes = note; save(); renderSchedule(); }
+}
+
+function executeImportCode() {
+  const code = document.getElementById('importCodeArea').value.trim();
+  if (!code) { alert('Вставь код!'); return; }
+  const resultDiv = document.getElementById('importResult');
+  try {
+    const old = { tasks: data.tasks.length, schedule: data.schedule.length, deadlines: data.deadlines.length, habits: data.habits.length, goals: data.goals.length, notes: data.notes.length };
+    const executeFunction = new Function('data', 'save', 'renderAll', 'createConfetti', 'getRandomColor', code);
+    executeFunction(data, save, renderAll, createConfetti, getRandomColor);
+    const changes = [];
+    if (data.tasks.length !== old.tasks) changes.push(`Задачи: ${old.tasks} → ${data.tasks.length}`);
+    if (data.schedule.length !== old.schedule) changes.push(`Расписание: ${old.schedule} → ${data.schedule.length}`);
+    if (data.deadlines.length !== old.deadlines) changes.push(`Дедлайны: ${old.deadlines} → ${data.deadlines.length}`);
+    if (data.habits.length !== old.habits) changes.push(`Привычки: ${old.habits} → ${data.habits.length}`);
+    if (data.goals.length !== old.goals) changes.push(`Цели: ${old.goals} → ${data.goals.length}`);
+    if (data.notes.length !== old.notes) changes.push(`Заметки: ${old.notes} → ${data.notes.length}`);
+    if (changes.length > 0) {
+      createConfetti();
+      resultDiv.style.display = 'block';
+      resultDiv.style.background = 'rgba(16,185,129,0.1)';
+      resultDiv.style.border = '1px solid #10b981';
+      resultDiv.style.color = '#10b981';
+      resultDiv.innerHTML = `<div style="font-weight:600;margin-bottom:8px">✅ Успешно!</div>${changes.map(c => `<div style="font-size:13px;margin-bottom:4px"><i class="fas fa-arrow-right" style="margin-right:8px"></i>${c}</div>`).join('')}`;
+    } else {
+      resultDiv.style.display = 'block';
+      resultDiv.style.background = 'rgba(59,130,246,0.1)';
+      resultDiv.style.border = '1px solid #3b82f6';
+      resultDiv.style.color = '#3b82f6';
+      resultDiv.innerHTML = '<div>ℹ️ Код выполнен, но данные не изменились</div>';
+    }
+    save(); renderAll();
+  } catch (e) {
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = 'rgba(239,68,68,0.1)';
+    resultDiv.style.border = '1px solid #ef4444';
+    resultDiv.style.color = '#ef4444';
+    resultDiv.innerHTML = `<div style="font-weight:600;margin-bottom:8px">❌ Ошибка</div><div style="font-size:12px;font-family:monospace">${e.message}</div>`;
+  }
+}
+
+function clearImportCode() {
+  document.getElementById('importCodeArea').value = '';
+  document.getElementById('importResult').style.display = 'none';
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('importCodeArea').value = text;
+  } catch (e) { alert('Используй Command+V (Mac) или Ctrl+V'); }
+}
+
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+function handleDragLeave(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); }
+function handleDrop(e) { e.preventDefault(); handleDragLeave(e); if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]); }
+function handleFileSelect(e) { if (e.target.files.length > 0) processFile(e.target.files[0]); }
+
+function processFile(file) {
+  const fileName = file.name.toLowerCase();
+  if (fileName.endsWith('.ics')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const events = parseICS(e.target.result);
+        let added = 0;
+        events.forEach(event => {
+          data.schedule.push({
+            id: Date.now() + Math.random(), subject: event.summary,
+            date: event.startDate.split('T')[0],
+            startTime: event.startDate.split('T')[1]?.substring(0, 5) || '09:00',
+            endTime: event.endDate.split('T')[1]?.substring(0, 5) || '10:30',
+            room: event.location || '', teacher: '',
+            type: event.location?.includes('http') ? 'online' : 'lecture',
+            color: '#8B5CF6'
+          });
+          added++;
+        });
+        save(); renderSchedule();
+        alert(`✅ Импортировано ${added} пар из ${file.name}!`);
+      } catch (err) { alert('❌ Ошибка: ' + err.message); }
+    };
+    reader.readAsText(file);
+  } else if (file.type.startsWith('image/')) {
+    alert(' Распознавание скриншотов в разработке!\n\nСкинь скриншот мне в чат — я напишу код для импорта.');
+  } else {
+    alert(' Неизвестный формат. Поддерживаются: .ics, изображения');
+  }
+}
+
+function parseICS(content) {
+  const events = []; const lines = content.split('\n'); let currentEvent = null;
+  lines.forEach(line => {
+    line = line.trim();
+    if (line === 'BEGIN:VEVENT') currentEvent = { summary: '', startDate: '', endDate: '', location: '' };
+    else if (line === 'END:VEVENT') { if (currentEvent && currentEvent.summary) events.push(currentEvent); currentEvent = null; }
+    else if (currentEvent) {
+      if (line.startsWith('SUMMARY:')) currentEvent.summary = line.substring(8);
+      else if (line.startsWith('DTSTART:')) currentEvent.startDate = line.substring(8);
+      else if (line.startsWith('DTEND:')) currentEvent.endDate = line.substring(6);
+      else if (line.startsWith('LOCATION:')) currentEvent.location = line.substring(9);
+    }
+  });
+  return events;
+}
+
+function exportToICS() {
+  let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//PlanPro//EN\n';
+  data.schedule.forEach(item => {
+    const startDate = item.date.replace(/-/g, '') + 'T' + item.startTime.replace(/:/g, '') + '00';
+    const endDate = item.date.replace(/-/g, '') + 'T' + item.endTime.replace(/:/g, '') + '00';
+    icsContent += 'BEGIN:VEVENT\n';
+    icsContent += `DTSTART:${startDate}\nDTEND:${endDate}\nSUMMARY:${item.subject}\n`;
+    if (item.room) icsContent += `LOCATION:${item.room}\n`;
+    if (item.teacher) icsContent += `DESCRIPTION:Преподаватель: ${item.teacher}\n`;
+    icsContent += 'END:VEVENT\n';
+  });
+  icsContent += 'END:VCALENDAR';
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'schedule.ics';
+  link.click();
+  alert('✅ Экспортировано в .ics!');
+  closeModal('importExportModal');
+}
+
+function exportToPDF() { alert('📄 PDF экспорт в разработке!'); }
+function importICS(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const events = parseICS(e.target.result);
+      let added = 0;
+      events.forEach(event => {
+        data.schedule.push({
+          id: Date.now() + Math.random(), subject: event.summary,
+          date: event.startDate.split('T')[0],
+          startTime: event.startDate.split('T')[1]?.substring(0, 5) || '09:00',
+          endTime: event.endDate.split('T')[1]?.substring(0, 5) || '10:30',
+          room: event.location || '', teacher: '',
+          type: event.location?.includes('http') ? 'online' : 'lecture',
+          color: '#8B5CF6'
+        });
+        added++;
+      });
+      save(); renderSchedule();
+      alert(`✅ Импортировано ${added} пар!`);
+      closeModal('importExportModal');
+    } catch (err) { alert('❌ Ошибка: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function copyScheduleLink() {
+  navigator.clipboard.writeText(window.location.href);
+  alert('🔗 Ссылка скопирована!');
+}
+
+function exportData() {
+  const dataStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `planner-backup-${TODAY}.json`; a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ Данные экспортированы!');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (confirm('Заменить текущие данные?')) {
+        data = { ...data, ...imported };
+        save(); renderAll(); alert('✅ Данные импортированы!');
+      }
+    } catch (err) { alert(' Ошибка: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function getRandomColor() {
+  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function createConfetti() {
+  const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
+  for (let i = 0; i < 30; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '50vh';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDelay = Math.random() * 0.5 + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1500);
+  }
+}
+
+function renderEveningSummary() {
+  const el = document.getElementById('eveningSummary');
+  if (!el) return;
+  const todayTasks = data.tasks.filter(t => t.dueDate === TODAY);
+  const doneTasks = todayTasks.filter(t => t.completed);
+  const todayClasses = data.schedule.filter(s => s.date === TODAY);
+  const attendedClasses = todayClasses.filter(s => s.attended === true);
+  const pomodoroSessions = data.pomodoroCount;
+  
+  let summary = '';
+  if (todayTasks.length === 0 && todayClasses.length === 0) {
+    summary = '🌟 Сегодня был свободный день! Отлично отдохнул.';
+  } else {
+    summary = `📊 Сегодня: выполнено <b>${doneTasks.length}/${todayTasks.length}</b> задач`;
+    if (todayClasses.length > 0) summary += `, посещено <b>${attendedClasses.length}/${todayClasses.length}</b> пар`;
+    if (pomodoroSessions > 0) summary += `, <b>${pomodoroSessions}</b> сессий фокуса`;
+    summary += '.';
+    
+    if (doneTasks.length === todayTasks.length && todayTasks.length > 0) {
+      summary += '  Все задачи выполнены!';
+    } else if (doneTasks.length < todayTasks.length && todayTasks.length > 0) {
+      summary += ` ⚠️ Осталось ${todayTasks.length - doneTasks.length} задач.`;
+    }
+    
+    if (pomodoroSessions >= 4) {
+      summary += ' 🔥 Отличная продуктивность!';
+    }
+  }
+  el.innerHTML = summary;
+}
+
+function renderAll() {
+  const todayTasks = data.tasks.filter(t => t.dueDate === TODAY && !t.archived);
+  const doneTasks = data.tasks.filter(t => t.completed && !t.archived);
+  const todayClasses = data.schedule.filter(s => s.date === TODAY);
+  
+  document.getElementById('statToday').textContent = todayTasks.length;
+  document.getElementById('navTaskCount').textContent = todayTasks.length;
+  document.getElementById('statDone').textContent = doneTasks.length;
+  document.getElementById('statClasses').textContent = todayClasses.length;
+  
+  const maxStreak = data.habits.length ? Math.max(...data.habits.map(getStreak)) : 0;
+  document.getElementById('statStreak').textContent = maxStreak;
+  
+  const totalToday = todayTasks.length;
+  const doneToday = todayTasks.filter(t => t.completed).length;
+  const progress = totalToday > 0 ? Math.round((doneToday / totalToday) * 100) : 0;
+  document.getElementById('dayProgressText').textContent = progress + '%';
+  document.getElementById('dayProgressFill').style.width = progress + '%';
+  
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  const weekTasks = data.tasks.filter(t => { const taskDate = new Date(t.dueDate); return taskDate >= weekStart && t.dueDate <= TODAY && !t.archived; });
+  const weekDone = weekTasks.filter(t => t.completed).length;
+  const weekProgress = weekTasks.length > 0 ? Math.round((weekDone / weekTasks.length) * 100) : 0;
+  document.getElementById('weekProgressText').textContent = weekProgress + '%';
+  document.getElementById('weekProgressFill').style.width = weekProgress + '%';
+  
+  const urgentDeadlines = data.deadlines.filter(d => !d.completed).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).slice(0, 3);
+  const dashDeadlines = document.getElementById('dashDeadlines');
+  if (dashDeadlines) {
+    if (urgentDeadlines.length === 0) {
+      dashDeadlines.innerHTML = '<div style="opacity:0.6;font-size:12px;text-align:center;padding:16px">Нет срочных дедлайнов </div>';
+    } else {
+      dashDeadlines.innerHTML = urgentDeadlines.map(d => {
+        const status = getDeadlineStatus(d.dueDate);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:${status.color}10">
+          <i class="fas fa-flag" style="color:${status.color};font-size:12px"></i>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:500;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</div>
+            <div style="font-size:10px;opacity:0.7">${d.dueDate} • ${status.label}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+  
+  const dashTasks = document.getElementById('dashTasks');
+  if (dashTasks) {
+    if (todayTasks.length === 0) {
+      dashTasks.innerHTML = '<div style="opacity:0.6;font-size:12px;text-align:center;padding:16px">На сегодня задач нет </div>';
+    } else {
+      dashTasks.innerHTML = todayTasks.map(t => {
+        const cat = categoryInfo[t.category] || categoryInfo.other;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--bg-tertiary);${t.completed ? 'opacity:0.5' : ''}">
+          <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})" style="width:18px;height:18px">
+          <span style="${t.completed ? 'text-decoration:line-through' : ''};flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cat.icon} ${t.title}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+  
+  const dashSchedule = document.getElementById('dashSchedule');
+  if (dashSchedule) {
+    if (todayClasses.length === 0) {
+      dashSchedule.innerHTML = '<div style="opacity:0.6;font-size:12px;text-align:center;padding:16px">Сегодня пар нет </div>';
+    } else {
+      dashSchedule.innerHTML = todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(s => `
+        <div style="padding:12px;border-radius:12px;background:${s.color}15;border-left:4px solid ${s.color}">
+          <div style="font-weight:600;font-size:13px">${s.subject}</div>
+          <div style="font-size:11px;opacity:0.7">${s.startTime} - ${s.endTime} ${s.room ? '• ' + s.room : ''}</div>
+        </div>
+      `).join('');
+    }
+  }
+  
+  renderTasks();
+  renderDeadlines();
+  renderSchedule();
+  renderHabits();
+  renderGoals();
+  renderNotes();
+  renderProjects();
+  updatePomodoroDisplay();
+  document.getElementById('pomodoroCount').textContent = data.pomodoroCount;
+  renderEveningSummary();
+}
+
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); openTaskModal(); }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    document.getElementById('themeSelector').classList.remove('active');
+  }
+});
+
+updateGreeting();
+updateQuote();
+renderAll();
+setInterval(updateGreeting, 60000);
+</script>
+
+</body>
+</html>
